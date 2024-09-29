@@ -1,4 +1,4 @@
-import { BaseMapComponent } from "./background-map";
+// import { BaseMapComponent } from "./background-map";
 import { CadMapComponent } from "./cad-map";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import "./cad-placement.css";
@@ -25,7 +25,7 @@ export function CadPlacementComponent({ file }: CadPlacementProps) {
                     <button type="button" onClick={() => $zoomRef.current.next("out")}>Zoom out</button>
                 </div>
             </div>
-            <BaseMapComponent subjects={{ $zoom: $zoomRef.current, $click: $clickRef.current }} />
+            {/* <B  aseMapComponent subjects={{ $zoom: $zoomRef.current, $click: $clickRef.current }} /> */}
             <CadMapComponent subjects={{ $zoom: $zoomRef.current, $click: $clickRef.current }} file={file} showCad={showCad} />
         </div>
     )

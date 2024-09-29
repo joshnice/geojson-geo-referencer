@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@turf/along": "7.1.0",
     "@turf/bbox": "^7.1.0",
     "@turf/bbox-polygon": "^7.1.0",
+    "@turf/length": "^7.1.0",
     "mapbox-gl": "^3.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
