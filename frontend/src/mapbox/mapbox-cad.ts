@@ -1,6 +1,8 @@
 import mapboxgl, { FillLayerSpecification, LineLayerSpecification, Map, SymbolLayerSpecification } from "mapbox-gl";
-import { FeatureCollection } from "geojson";
+import { FeatureCollection, Feature, Polygon } from "geojson";
 import { Subjects } from "./types";
+import { bbox } from "@turf/bbox";
+import { bboxPolygon } from "@turf/bbox-polygon";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
@@ -8,6 +10,8 @@ export class MapboxCad {
     private map: Map | null = null;
 
     private sourceId = "cad-source";
+
+    private boundsSourceId = "bounds";
 
     private fillLayer: FillLayerSpecification = {
         id: "fill-layer",
@@ -41,6 +45,12 @@ export class MapboxCad {
         filter: ["==", ["geometry-type"], "Point"]
     }
 
+    private boundsLayer: FillLayerSpecification = {
+        id: "bounds",
+        type: "fill",
+        source: this.boundsSourceId,
+    }
+
     constructor(element: HTMLDivElement, file: File, subjects: Subjects) {
         this.createMap(element, file, subjects.$click);
         this.setUpSubjects(subjects);
@@ -61,10 +71,13 @@ export class MapboxCad {
             },
         });
 
+        const bounds = bboxPolygon(bbox(geojson));
+        console.log("bounds", bounds);
+
         this.map.doubleClickZoom.disable();
 
         this.map.once("idle", () => {
-            this.addSource(geojson);
+            this.addSource(geojson, bounds);
             this.addLayers();
         });
 
@@ -75,7 +88,13 @@ export class MapboxCad {
         })
     }
 
-    private addSource(geojson: FeatureCollection) {
+    private addSource(geojson: FeatureCollection, bounds: Feature<Polygon>) {
+
+        this.map?.addSource(this.boundsSourceId, {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: [bounds] }
+        })
+
         this.map?.addSource(this.sourceId, {
             type: "geojson",
             data: geojson
@@ -83,6 +102,7 @@ export class MapboxCad {
     }
 
     private addLayers() {
+        this.map?.addLayer(this.boundsLayer);
         this.map?.addLayer(this.fillLayer);
         this.map?.addLayer(this.lineLayer);
         this.map?.addLayer(this.textLayer);

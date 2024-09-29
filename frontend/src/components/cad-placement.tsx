@@ -11,7 +11,7 @@ interface CadPlacementProps {
 
 export function CadPlacementComponent({ file }: CadPlacementProps) {
 
-    const [showCad, setShowCad] = useState(false);
+    const [showCad, setShowCad] = useState(true);
 
     const $zoomRef = useRef(new Subject<"in" | "out">());
     const $clickRef = useRef(new Subject<{ lngLat: [number, number], canvas: [number, number] }>());
@@ -19,7 +19,7 @@ export function CadPlacementComponent({ file }: CadPlacementProps) {
     return (
         <div>
             <div className="controls">
-                <div>Show cad <input type="checkbox" onChange={() => setShowCad(!showCad)} /></div>
+                <div>Show cad <input type="checkbox" checked={showCad} onChange={() => setShowCad(!showCad)} /></div>
                 <div>
                     <button type="button" onClick={() => $zoomRef.current.next("in")}>Zoom in</button>
                     <button type="button" onClick={() => $zoomRef.current.next("out")}>Zoom out</button>
