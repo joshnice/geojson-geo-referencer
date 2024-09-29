@@ -40,3 +40,61 @@ export function modifyFeatureWithFactor(feature, longFactor, latFactor) {
             throw new Error(`Not handled geometry type ${feature.geometry.type}`)
     }
 }
+
+/**
+ * @returns {{ highestLong: number, highestLat: number, lowestLat: number, lowestLong: number }}
+ */
+export function findHighestAndLowestCoordinates(featureCollection) {
+    let highestLong = -Infinity;
+    let highestLat = -Infinity;
+    let lowestLong = Infinity;
+    let lowestLat = Infinity;
+
+    featureCollection.features.forEach((feature) => {
+
+        const flatternedCoordinates = flatternFeatureCoordinates(feature);
+
+        flatternedCoordinates.forEach(([long, lat]) => {
+
+            if (long > highestLong) {
+                highestLong = long;
+            }
+
+            if (lat > highestLat) {
+                highestLat = lat;
+            }
+
+            if (long < lowestLong) {
+                lowestLong = long;
+            }
+
+            if (lat < lowestLat) {
+                lowestLat = lat;
+            }
+
+        });
+
+    });
+
+    return { highestLong, highestLat, lowestLat, lowestLong }
+}
+
+export function getAvgLongLat(featureCollection) {
+    let longTot = 0;
+    let latTot = 0;
+    let coordCount = 0;
+
+    featureCollection.features.forEach((feature) => {
+
+        const flatternedCoordinates = flatternFeatureCoordinates(feature);
+
+        flatternedCoordinates.forEach(([long, lat]) => {
+            coordCount += 1;
+            longTot += long;
+            latTot += lat;
+        });
+    });
+
+    return { lat: latTot / coordCount, long: longTot / coordCount }
+}
+
