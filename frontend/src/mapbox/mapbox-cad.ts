@@ -1,16 +1,15 @@
 import mapboxgl, { FillLayerSpecification, LineLayerSpecification, Map, SymbolLayerSpecification } from "mapbox-gl";
 import { FeatureCollection, Feature, Polygon } from "geojson";
 import { Subjects } from "./types";
-import { along } from "@turf/along";
 import { bbox } from "@turf/bbox";
 import { length } from "@turf/length"
 import { bboxPolygon } from "@turf/bbox-polygon";
+import { transformScale } from "@turf/transform-scale";
 import { createLine } from "../geo-helpers/line";
-import { createFeatureCollection } from "../geo-helpers/feature-collection";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
-const CAD_WIDTH_METERS = 1000;
+const CAD_WIDTH_METERS = 200;
 
 export class MapboxCad {
     private map: Map | null = null;
@@ -65,46 +64,46 @@ export class MapboxCad {
     private async createMap(element: HTMLDivElement, file: File, $click: Subjects["$click"]) {
 
         const geojson = await this.loadGeojson(file);
-
         const bounds = bboxPolygon(bbox(geojson));
-
         const refrencePoint = bounds.geometry.coordinates[0][3] as [number, number];
         const coordTwoWidth = bounds.geometry.coordinates[0][2] as [number, number];
         const referenceLine = createLine([refrencePoint, coordTwoWidth]);
         const boundsWidth = length(referenceLine, { units: "meters" });
         const widthScaleFactor = CAD_WIDTH_METERS / boundsWidth;
+        transformScale(geojson, widthScaleFactor, { origin: refrencePoint, mutate: true });
 
-        const newFeatures: Feature[] = [];
-        geojson.features.forEach((feature) => {
-            if (feature.geometry.type === "LineString") {
-                const newCoords = feature.geometry.coordinates.map(([lng, lat]) => {
-                    const guideLine = createLine([refrencePoint, [lng, lat]]);
-                    const lengthOfGuideLine = length(guideLine, { units: "meters" });
-                    const alongGuideLineAmount = widthScaleFactor * lengthOfGuideLine;
-                    return along(guideLine, alongGuideLineAmount, { units: "meters" }).geometry.coordinates;
-                });
-                feature.geometry.coordinates = newCoords;
-                newFeatures.push(feature);
-            }
-        });
+        // Original way with issue of curved geojson
+        // const newFeatures: Feature[] = [];
+        // geojson.features.forEach((feature) => {
+        //     if (feature.geometry.type === "LineString") {
+        //         const newCoords = feature.geometry.coordinates.map(([lng, lat]) => {
+        //             const guideLine = createLine([refrencePoint, [lng, lat]]);
+        //             const lengthOfGuideLine = length(guideLine, { units: "meters" });
+        //             const alongGuideLineAmount = widthScaleFactor * lengthOfGuideLine;
+        //             return along(guideLine, alongGuideLineAmount, { units: "meters" }).geometry.coordinates;
+        //         });
+        //         feature.geometry.coordinates = newCoords;
+        //         newFeatures.push(feature);
+        //     }
+        // });
+        // const newFeatureCollection = createFeatureCollection(newFeatures);
 
-
-        const newFeatureCollection = createFeatureCollection(newFeatures);
-
-        const [one, two, three, four] = bbox(newFeatureCollection);
+        const [one, two, three, four] = bbox(geojson);
 
         this.map = new mapboxgl.Map({
             container: element,
             center: [0, 0],
             zoom: 1,
             projection: "mercator",
-            maxPitch: 0
+            maxPitch: 0,
+            style: "mapbox://styles/mapbox/light-v11",
+            maxZoom: 24,
         });
 
         this.map.doubleClickZoom.disable();
 
         this.map.once("idle", () => {
-            this.addSource(newFeatureCollection, bounds);
+            this.addSource(geojson, bounds);
             this.addLayers();
             this.map?.fitBounds([one, two, three, four])
         });
@@ -131,9 +130,9 @@ export class MapboxCad {
 
     private addLayers() {
         // this.map?.addLayer(this.bound    sLayer);
-        this.map?.addLayer(this.fillLayer);
+        // this.map?.addLayer(this.fillLayer);
         this.map?.addLayer(this.lineLayer);
-        this.map?.addLayer(this.textLayer);
+        // this.map?.addLayer(this.textLayer);
     }
 
     private async loadGeojson(file: File): Promise<FeatureCollection> {
