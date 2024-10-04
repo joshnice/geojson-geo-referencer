@@ -3,14 +3,17 @@ import { FeatureCollection, Feature, Polygon, LineString } from "geojson";
 import { Subjects } from "./types";
 import { bbox } from "@turf/bbox";
 import { length } from "@turf/length"
-import { bboxPolygon } from "@turf/bbox-polygon";
-import { transformScale } from "@turf/transform-scale";
+import { along } from "@turf/along";
 import { createLine } from "../geo-helpers/line";
 import center from "@turf/center";
+import { createFeatureCollection } from "../geo-helpers/feature-collection";
+import { getTopLeftCoordinate, getTopRightCoordinate } from "../geo-helpers/get-feature-collection-corners";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
 const CAD_WIDTH_METERS = 200;
+
+const LNG_LAT_TO_METER = 111139;
 
 export class MapboxCad {
     private map: Map | null = null;
@@ -63,33 +66,31 @@ export class MapboxCad {
     }
 
     private async createMap(element: HTMLDivElement, file: File, $click: Subjects["$click"]) {
-
         const geojson = await this.loadGeojson(file);
-        const bounds = bboxPolygon(bbox(geojson));
-        const refrencePoint = bounds.geometry.coordinates[0][3] as [number, number];
-        const coordTwoWidth = bounds.geometry.coordinates[0][2] as [number, number];
+        const refrencePoint = getTopLeftCoordinate(geojson);
+        const coordTwoWidth = getTopRightCoordinate(geojson);
         const referenceLine = createLine([refrencePoint, coordTwoWidth]);
-        const boundsWidth = length(referenceLine, { units: "meters" });
-        const widthScaleFactor = CAD_WIDTH_METERS / boundsWidth;
-        transformScale(geojson, widthScaleFactor, { origin: refrencePoint, mutate: true });
+        console.log("referenceLine", referenceLine);
+        const oldBoundsWidth = length(referenceLine, { units: "meters" });
+        const widthScaleFactor = CAD_WIDTH_METERS / oldBoundsWidth;
 
         // Original way with issue of curved geojson
-        // const newFeatures: Feature[] = [];
-        // geojson.features.forEach((feature) => {
-        //     if (feature.geometry.type === "LineString") {
-        //         const newCoords = feature.geometry.coordinates.map(([lng, lat]) => {
-        //             const guideLine = createLine([refrencePoint, [lng, lat]]);
-        //             const lengthOfGuideLine = length(guideLine, { units: "meters" });
-        //             const alongGuideLineAmount = widthScaleFactor * lengthOfGuideLine;
-        //             return along(guideLine, alongGuideLineAmount, { units: "meters" }).geometry.coordinates;
-        //         });
-        //         feature.geometry.coordinates = newCoords;
-        //         newFeatures.push(feature);
-        //     }
-        // });
-        // const newFeatureCollection = createFeatureCollection(newFeatures);
+        const newFeatures: Feature[] = [];
+        geojson.features.forEach((feature) => {
+            if (feature.geometry.type === "LineString") {
+                const newCoords = feature.geometry.coordinates.map(([lng, lat]) => {
+                    const guideLine = createLine([refrencePoint, [lng, lat]]);
+                    const lengthOfGuideLine = length(guideLine, { units: "meters" });
+                    const alongGuideLineAmount = widthScaleFactor * lengthOfGuideLine;
+                    return along(guideLine, alongGuideLineAmount, { units: "meters" }).geometry.coordinates;
+                });
+                feature.geometry.coordinates = newCoords;
+                newFeatures.push(feature);
+            }
+        });
+        const newFeatureCollection = createFeatureCollection(newFeatures);
 
-        const [one, two, three, four] = bbox(geojson);
+        const [one, two, three, four] = bbox(newFeatureCollection);
 
         this.map = new mapboxgl.Map({
             container: element,
@@ -104,7 +105,7 @@ export class MapboxCad {
         this.map.doubleClickZoom.disable();
 
         this.map.once("idle", () => {
-            this.addSource(geojson, bounds);
+            this.addSource(newFeatureCollection);
             this.addLayers();
             this.map?.fitBounds([one, two, three, four], { duration: 0 })
         });
@@ -116,12 +117,7 @@ export class MapboxCad {
         })
     }
 
-    private addSource(geojson: FeatureCollection, bounds: Feature<Polygon>) {
-
-        this.map?.addSource(this.boundsSourceId, {
-            type: "geojson",
-            data: { type: "FeatureCollection", features: [bounds] }
-        })
+    private addSource(geojson: FeatureCollection) {
 
         this.map?.addSource(this.sourceId, {
             type: "geojson",
