@@ -1,11 +1,12 @@
 import mapboxgl, { FillLayerSpecification, LineLayerSpecification, Map, SymbolLayerSpecification } from "mapbox-gl";
-import { FeatureCollection, Feature, Polygon } from "geojson";
+import { FeatureCollection, Feature, Polygon, LineString } from "geojson";
 import { Subjects } from "./types";
 import { bbox } from "@turf/bbox";
 import { length } from "@turf/length"
 import { bboxPolygon } from "@turf/bbox-polygon";
 import { transformScale } from "@turf/transform-scale";
 import { createLine } from "../geo-helpers/line";
+import center from "@turf/center";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
@@ -105,7 +106,7 @@ export class MapboxCad {
         this.map.once("idle", () => {
             this.addSource(geojson, bounds);
             this.addLayers();
-            this.map?.fitBounds([one, two, three, four])
+            this.map?.fitBounds([one, two, three, four], { duration: 0 })
         });
 
         this.map.on("click", (e) => {
@@ -162,5 +163,34 @@ export class MapboxCad {
                 this.map?.zoomOut();
             }
         })
+
+        subjects.$moveCadToCenter.subscribe(() => {
+
+            const centerOfMap = this.map?.getCenter();
+            const [mapCenterPointLong, mapCenterPointLat]: [number, number] = [centerOfMap?.lng as number, centerOfMap?.lat as number];
+
+            const geojson = this.map?.getSource(this.sourceId);
+            if (geojson?.type === "geojson") {
+                const featureCollection = geojson._data;
+                if (typeof featureCollection !== "string") {
+                    const [geojsonLong, geojsonLat] = center(featureCollection).geometry.coordinates;
+                    const longDiff = mapCenterPointLong - geojsonLong;
+                    const latDiff = mapCenterPointLat - geojsonLat;
+                    const newFeatures: FeatureCollection = { type: "FeatureCollection", features: [] };
+                    if (featureCollection.type === "FeatureCollection") {
+                        featureCollection.features.forEach((f) => {
+                            if (f.geometry.type === "LineString") {
+                                const newFeatureCoords: Feature<LineString>["geometry"]["coordinates"] = [];
+                                f.geometry.coordinates.forEach(([long, lat]) => {
+                                    newFeatureCoords.push([long + longDiff, lat + latDiff]);
+                                });
+                                newFeatures.features.push({ ...f, geometry: { ...f.geometry, coordinates: newFeatureCoords } })
+                            }
+                        });
+                        geojson.setData(newFeatures);
+                    }
+                }
+            }
+        });
     }
 }
