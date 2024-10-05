@@ -2,25 +2,21 @@ import mapboxgl, { FillLayerSpecification, LineLayerSpecification, Map, SymbolLa
 import { FeatureCollection, Feature, Polygon, LineString } from "geojson";
 import { Subjects } from "./types";
 import { bbox } from "@turf/bbox";
-import { length } from "@turf/length"
-import { along } from "@turf/along";
-import { createLine } from "../geo-helpers/line";
 import center from "@turf/center";
+import { rhumbDistance } from "@turf/rhumb-distance"
+import { rhumbDestination } from "@turf/rhumb-destination"
+import { rhumbBearing } from "@turf/rhumb-bearing"
 import { createFeatureCollection } from "../geo-helpers/feature-collection";
 import { getTopLeftCoordinate, getTopRightCoordinate } from "../geo-helpers/get-feature-collection-corners";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
-const CAD_WIDTH_METERS = 200;
-
-const LNG_LAT_TO_METER = 111139;
+const CAD_WIDTH_METERS = 100;
 
 export class MapboxCad {
     private map: Map | null = null;
 
     private sourceId = "cad-source";
-
-    private boundsSourceId = "bounds";
 
     private fillLayer: FillLayerSpecification = {
         id: "fill-layer",
@@ -43,23 +39,6 @@ export class MapboxCad {
         filter: ["==", ["geometry-type"], "LineString"]
     };
 
-
-    private textLayer: SymbolLayerSpecification = {
-        id: "symbol-layer",
-        type: "symbol",
-        layout: {
-            "text-field": ["get", "text"]
-        },
-        source: this.sourceId,
-        filter: ["==", ["geometry-type"], "Point"]
-    }
-
-    private boundsLayer: FillLayerSpecification = {
-        id: "bounds",
-        type: "fill",
-        source: this.boundsSourceId,
-    }
-
     constructor(element: HTMLDivElement, file: File, subjects: Subjects) {
         this.createMap(element, file, subjects.$click);
         this.setUpSubjects(subjects);
@@ -67,25 +46,25 @@ export class MapboxCad {
 
     private async createMap(element: HTMLDivElement, file: File, $click: Subjects["$click"]) {
         const geojson = await this.loadGeojson(file);
-        const refrencePoint = getTopLeftCoordinate(geojson);
-        const coordTwoWidth = getTopRightCoordinate(geojson);
-        const referenceLine = createLine([refrencePoint, coordTwoWidth]);
-        console.log("referenceLine", referenceLine);
-        const oldBoundsWidth = length(referenceLine, { units: "meters" });
-        const widthScaleFactor = CAD_WIDTH_METERS / oldBoundsWidth;
+        const topLeftCoord = getTopLeftCoordinate(geojson);
+        const topRightCoord = getTopRightCoordinate(geojson);
+        const notScaledCadWidth = rhumbDistance(topLeftCoord, topRightCoord, { units: "meters" });
+        const widthScaleFactor = CAD_WIDTH_METERS / notScaledCadWidth;
 
-        // Original way with issue of curved geojson
         const newFeatures: Feature[] = [];
         geojson.features.forEach((feature) => {
             if (feature.geometry.type === "LineString") {
                 const newCoords = feature.geometry.coordinates.map(([lng, lat]) => {
-                    const guideLine = createLine([refrencePoint, [lng, lat]]);
-                    const lengthOfGuideLine = length(guideLine, { units: "meters" });
-                    const alongGuideLineAmount = widthScaleFactor * lengthOfGuideLine;
-                    return along(guideLine, alongGuideLineAmount, { units: "meters" }).geometry.coordinates;
+                    const lengthBetweenRefPointAndCoord = rhumbDistance(topLeftCoord, [lng, lat], { units: "meters" });
+                    const metersAlongGuideLine = lengthBetweenRefPointAndCoord * widthScaleFactor;
+                    const bearing = rhumbBearing(topLeftCoord, [lng, lat]);
+                    const dest = rhumbDestination(topLeftCoord, metersAlongGuideLine, bearing, { units: "meters" });
+                    return dest.geometry.coordinates;
                 });
-                feature.geometry.coordinates = newCoords;
-                newFeatures.push(feature);
+                newFeatures.push({
+                    type: "Feature", geometry: { coordinates: newCoords, type: "LineString" },
+                    properties: {}
+                });
             }
         });
         const newFeatureCollection = createFeatureCollection(newFeatures);
@@ -126,10 +105,7 @@ export class MapboxCad {
     }
 
     private addLayers() {
-        // this.map?.addLayer(this.bound    sLayer);
-        // this.map?.addLayer(this.fillLayer);
         this.map?.addLayer(this.lineLayer);
-        // this.map?.addLayer(this.textLayer);
     }
 
     private async loadGeojson(file: File): Promise<FeatureCollection> {
