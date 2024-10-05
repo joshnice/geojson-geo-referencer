@@ -10,6 +10,7 @@ import { transformRotate } from "@turf/transform-rotate"
 import { createFeatureCollection } from "../geo-helpers/feature-collection";
 import { getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import { moveFeatureCollection } from "../geo-helpers/move-geojson";
+import { optimiseFeatureCollection } from "../geo-helpers/filter-feature-collection";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
@@ -80,9 +81,10 @@ export class MapboxCad {
                 });
             }
         });
-        const newFeatureCollection = createFeatureCollection(newFeatures);
 
-        const [one, two, three, four] = bbox(newFeatureCollection);
+        const filteredFeatureCollection = optimiseFeatureCollection(createFeatureCollection(newFeatures), 1);
+
+        const [one, two, three, four] = bbox(filteredFeatureCollection);
 
         this.map = new mapboxgl.Map({
             container: element,
@@ -97,7 +99,7 @@ export class MapboxCad {
         this.map.doubleClickZoom.disable();
 
         this.map.once("idle", () => {
-            this.addSource(newFeatureCollection);
+            this.addSource(filteredFeatureCollection);
             this.addLayers();
             this.map?.fitBounds([one, two, three, four], { duration: 0 });
             this.cadLayerEventListeners();
