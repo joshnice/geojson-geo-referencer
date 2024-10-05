@@ -1,5 +1,5 @@
 import mapboxgl, { FillLayerSpecification, LineLayerSpecification, Map } from "mapbox-gl";
-import { FeatureCollection, Feature, LineString } from "geojson";
+import { FeatureCollection, Feature } from "geojson";
 import { Subjects } from "./types";
 import { bbox } from "@turf/bbox";
 import center from "@turf/center";
@@ -8,7 +8,7 @@ import { rhumbDestination } from "@turf/rhumb-destination"
 import { rhumbBearing } from "@turf/rhumb-bearing"
 import { transformRotate } from "@turf/transform-rotate"
 import { createFeatureCollection } from "../geo-helpers/feature-collection";
-import { getTopLeftCoordinate, getTopRightCoordinate } from "../geo-helpers/get-feature-collection-corners";
+import { getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import { moveFeatureCollection } from "../geo-helpers/move-geojson";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
@@ -54,8 +54,8 @@ export class MapboxCad {
 
     private async createMap(element: HTMLDivElement, file: File, $click: Subjects["$click"]) {
         const geojson = await this.loadGeojson(file);
-        const topLeftCoord = getTopLeftCoordinate(geojson);
-        const topRightCoord = getTopRightCoordinate(geojson);
+        const topLeftCoord = getCornerCoordinate(geojson, "top-left");
+        const topRightCoord = getCornerCoordinate(geojson, "top-right");
         const notScaledCadWidth = rhumbDistance(topLeftCoord, topRightCoord, { units: "meters" });
         const widthScaleFactor = CAD_WIDTH_METERS / notScaledCadWidth;
 

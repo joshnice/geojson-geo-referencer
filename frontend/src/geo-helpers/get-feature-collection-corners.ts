@@ -1,52 +1,43 @@
 import { FeatureCollection } from "geojson";
 import { flatternFeatureCoordinates } from "./coordinate-helpers";
 
-export function getTopLeftCoordinate(featureCollection: FeatureCollection): [number, number] {
-    let topLeftCoordinate: [number, number] | null = null;
+type CornerPositon = "top-left" | "top-right" | "bottom-right" | "bottom-left";
+
+export function getCornerCoordinate(featureCollection: FeatureCollection, cornerPositon: CornerPositon): [number, number] {
+    let cornerCoordinate: [number, number] | null = null;
 
     featureCollection.features.forEach((feature) => {
         const flatterenedCoordaintes = flatternFeatureCoordinates(feature);
-        flatterenedCoordaintes.forEach(([long, lat]) => {
+        flatterenedCoordaintes.forEach((compCoord) => {
 
-            if (topLeftCoordinate == null) {
-                topLeftCoordinate = [long, lat];
+            if (cornerCoordinate == null) {
+                cornerCoordinate = compCoord as [number, number];
             }
 
-            if (long < topLeftCoordinate[0] && lat > topLeftCoordinate[1]) {
-                topLeftCoordinate = [long, lat];
+            if (compareCorner(cornerPositon, cornerCoordinate, compCoord as [number, number])) {
+                cornerCoordinate = compCoord as [number, number];
             }
         });
-
     });
 
-    if (topLeftCoordinate == null) {
+    if (cornerCoordinate == null) {
         throw new Error();
     }
 
-    return topLeftCoordinate;
+    return cornerCoordinate;
 }
 
-export function getTopRightCoordinate(featureCollection: FeatureCollection): [number, number] {
-    let topLeftCoordinate: [number, number] | null = null;
-
-    featureCollection.features.forEach((feature) => {
-        const flatterenedCoordaintes = flatternFeatureCoordinates(feature);
-        flatterenedCoordaintes.forEach(([long, lat]) => {
-
-            if (topLeftCoordinate == null) {
-                topLeftCoordinate = [long, lat];
-            }
-
-            if (long > topLeftCoordinate[0] && lat > topLeftCoordinate[1]) {
-                topLeftCoordinate = [long, lat];
-            }
-        });
-
-    });
-
-    if (topLeftCoordinate == null) {
-        throw new Error();
+function compareCorner(cornerPositon: CornerPositon, current: [number, number], comparsion: [number, number]) {
+    const [compLong, compLat] = comparsion;
+    const [currentLong, currentLat] = current;
+    switch (cornerPositon) {
+        case "top-left":
+            return compLong < currentLong && compLat > currentLat;
+        case "top-right":
+            return compLong > currentLong && compLat > currentLat;
+        case "bottom-left":
+            return compLong < currentLong && compLat < currentLat;
+        case "bottom-right":
+            return compLong < currentLong && compLat > currentLat;
     }
-
-    return topLeftCoordinate;
 }
