@@ -11,10 +11,19 @@ interface CadPlacementProps {
 export function CadPlacementComponent({ file }: CadPlacementProps) {
 
     const [showCad, setShowCad] = useState(true);
+    const [rotation, setRotation] = useState(0);
+
 
     const $zoomRef = useRef(new Subject<"in" | "out">());
     const $moveCadCenter = useRef(new Subject<void>());
     const $clickRef = useRef(new Subject<{ lngLat: [number, number], canvas: [number, number] }>());
+    const $rotationRef = useRef(new Subject<number>());
+
+    const handleRotationChange = (valStr: string) => {
+        const valNumber = Number.parseFloat(valStr);
+        $rotationRef.current.next(valNumber);
+        setRotation(valNumber);
+    }
 
     return (
         <div>
@@ -25,8 +34,9 @@ export function CadPlacementComponent({ file }: CadPlacementProps) {
                     <button type="button" onClick={() => $zoomRef.current.next("out")}>Zoom out</button>
                     <button type="button" onClick={() => $moveCadCenter.current.next()}>Move cad to center</button>
                 </div>
+                <div>Rotation <input type="number" value={rotation} onChange={(event) => handleRotationChange(event.target.value)} /></div>
             </div>
-            <CadMapComponent subjects={{ $zoom: $zoomRef.current, $click: $clickRef.current, $moveCadToCenter: $moveCadCenter.current }} file={file} showCad={showCad} />
+            <CadMapComponent subjects={{ $zoom: $zoomRef.current, $click: $clickRef.current, $moveCadToCenter: $moveCadCenter.current, $rotation: $rotationRef.current }} file={file} showCad={showCad} />
         </div>
     )
 }

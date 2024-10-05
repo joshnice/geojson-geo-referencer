@@ -15,7 +15,6 @@ export function CadMapComponent({ file, showCad, subjects }: CadMapProps) {
     const onMapElementRender = (containerElement: HTMLDivElement) => {
         if (!createdMap.current) {
             createdMap.current = true;
-            console.log("create map cad");
             new MapboxCad(containerElement, file, subjects);
         }
     }

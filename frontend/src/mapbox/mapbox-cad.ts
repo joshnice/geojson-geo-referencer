@@ -1,11 +1,12 @@
-import mapboxgl, { FillLayerSpecification, LineLayerSpecification, Map, SymbolLayerSpecification } from "mapbox-gl";
-import { FeatureCollection, Feature, Polygon, LineString } from "geojson";
+import mapboxgl, { FillLayerSpecification, LineLayerSpecification, Map } from "mapbox-gl";
+import { FeatureCollection, Feature, LineString } from "geojson";
 import { Subjects } from "./types";
 import { bbox } from "@turf/bbox";
 import center from "@turf/center";
 import { rhumbDistance } from "@turf/rhumb-distance"
 import { rhumbDestination } from "@turf/rhumb-destination"
 import { rhumbBearing } from "@turf/rhumb-bearing"
+import { transformRotate } from "@turf/transform-rotate"
 import { createFeatureCollection } from "../geo-helpers/feature-collection";
 import { getTopLeftCoordinate, getTopRightCoordinate } from "../geo-helpers/get-feature-collection-corners";
 
@@ -17,6 +18,8 @@ export class MapboxCad {
     private map: Map | null = null;
 
     private sourceId = "cad-source";
+
+    private previousRotation = 0;
 
     private fillLayer: FillLayerSpecification = {
         id: "fill-layer",
@@ -140,29 +143,48 @@ export class MapboxCad {
 
             const centerOfMap = this.map?.getCenter();
             const [mapCenterPointLong, mapCenterPointLat]: [number, number] = [centerOfMap?.lng as number, centerOfMap?.lat as number];
-
-            const geojson = this.map?.getSource(this.sourceId);
-            if (geojson?.type === "geojson") {
-                const featureCollection = geojson._data;
-                if (typeof featureCollection !== "string") {
-                    const [geojsonLong, geojsonLat] = center(featureCollection).geometry.coordinates;
-                    const longDiff = mapCenterPointLong - geojsonLong;
-                    const latDiff = mapCenterPointLat - geojsonLat;
-                    const newFeatures: FeatureCollection = { type: "FeatureCollection", features: [] };
-                    if (featureCollection.type === "FeatureCollection") {
-                        featureCollection.features.forEach((f) => {
-                            if (f.geometry.type === "LineString") {
-                                const newFeatureCoords: Feature<LineString>["geometry"]["coordinates"] = [];
-                                f.geometry.coordinates.forEach(([long, lat]) => {
-                                    newFeatureCoords.push([long + longDiff, lat + latDiff]);
-                                });
-                                newFeatures.features.push({ ...f, geometry: { ...f.geometry, coordinates: newFeatureCoords } })
-                            }
-                        });
-                        geojson.setData(newFeatures);
-                    }
+            const featureCollection = this.getCadGeojson();
+            const [geojsonLong, geojsonLat] = center(featureCollection).geometry.coordinates;
+            const longDiff = mapCenterPointLong - geojsonLong;
+            const latDiff = mapCenterPointLat - geojsonLat;
+            const newFeatures: FeatureCollection = { type: "FeatureCollection", features: [] };
+            featureCollection.features.forEach((f) => {
+                if (f.geometry.type === "LineString") {
+                    const newFeatureCoords: Feature<LineString>["geometry"]["coordinates"] = [];
+                    f.geometry.coordinates.forEach(([long, lat]) => {
+                        newFeatureCoords.push([long + longDiff, lat + latDiff]);
+                    });
+                    newFeatures.features.push({ ...f, geometry: { ...f.geometry, coordinates: newFeatureCoords } })
                 }
-            }
+            });
+            this.setCadGeojson(newFeatures);
         });
+
+        subjects.$rotation.subscribe((rotation) => {
+            const cadGeoJSON = this.getCadGeojson();
+            const resetCadGeoJSON = transformRotate(cadGeoJSON, this.previousRotation * -1);
+            this.previousRotation = rotation;
+            const rotatedGeoJSON = transformRotate(resetCadGeoJSON, rotation);
+            this.setCadGeojson(rotatedGeoJSON);
+        })
     }
+
+    private getCadGeojson(): FeatureCollection {
+        const geojson = this.map?.getSource(this.sourceId);
+        if (geojson?.type === "geojson") {
+            const featureCollection = geojson._data;
+            if (typeof featureCollection !== "string" && featureCollection.type === "FeatureCollection") {
+                return featureCollection;
+            }
+        }
+        throw new Error();
+    }
+
+    private setCadGeojson(updatedCadGeojson: FeatureCollection) {
+        const geojson = this.map?.getSource(this.sourceId);
+        if (geojson?.type === "geojson") {
+            geojson.setData(updatedCadGeojson)
+        }
+    }
+
 }
