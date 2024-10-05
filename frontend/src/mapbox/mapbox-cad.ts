@@ -9,6 +9,7 @@ import { rhumbBearing } from "@turf/rhumb-bearing"
 import { transformRotate } from "@turf/transform-rotate"
 import { createFeatureCollection } from "../geo-helpers/feature-collection";
 import { getTopLeftCoordinate, getTopRightCoordinate } from "../geo-helpers/get-feature-collection-corners";
+import { moveFeatureCollection } from "../geo-helpers/move-geojson";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
@@ -20,6 +21,10 @@ export class MapboxCad {
     private sourceId = "cad-source";
 
     private previousRotation = 0;
+
+    private startingDragPos: [number, number] | null = null;
+
+    private lastMovement = 0;
 
     private fillLayer: FillLayerSpecification = {
         id: "fill-layer",
@@ -89,7 +94,8 @@ export class MapboxCad {
         this.map.once("idle", () => {
             this.addSource(newFeatureCollection);
             this.addLayers();
-            this.map?.fitBounds([one, two, three, four], { duration: 0 })
+            this.map?.fitBounds([one, two, three, four], { duration: 0 });
+            this.cadLayerEventListeners();
         });
 
         this.map.on("click", (e) => {
@@ -142,21 +148,10 @@ export class MapboxCad {
         subjects.$moveCadToCenter.subscribe(() => {
 
             const centerOfMap = this.map?.getCenter();
-            const [mapCenterPointLong, mapCenterPointLat]: [number, number] = [centerOfMap?.lng as number, centerOfMap?.lat as number];
+            const start: [number, number] = [centerOfMap?.lng as number, centerOfMap?.lat as number];
             const featureCollection = this.getCadGeojson();
-            const [geojsonLong, geojsonLat] = center(featureCollection).geometry.coordinates;
-            const longDiff = mapCenterPointLong - geojsonLong;
-            const latDiff = mapCenterPointLat - geojsonLat;
-            const newFeatures: FeatureCollection = { type: "FeatureCollection", features: [] };
-            featureCollection.features.forEach((f) => {
-                if (f.geometry.type === "LineString") {
-                    const newFeatureCoords: Feature<LineString>["geometry"]["coordinates"] = [];
-                    f.geometry.coordinates.forEach(([long, lat]) => {
-                        newFeatureCoords.push([long + longDiff, lat + latDiff]);
-                    });
-                    newFeatures.features.push({ ...f, geometry: { ...f.geometry, coordinates: newFeatureCoords } })
-                }
-            });
+            const end = center(featureCollection).geometry.coordinates;
+            const newFeatures = moveFeatureCollection(featureCollection, start, end as [number, number]);
             this.setCadGeojson(newFeatures);
         });
 
@@ -185,6 +180,48 @@ export class MapboxCad {
         if (geojson?.type === "geojson") {
             geojson.setData(updatedCadGeojson)
         }
+    }
+
+
+    private cadLayerEventListeners() {
+
+        this.map?.on("mouseenter", this.lineLayer.id, () => {
+            if (this.map) {
+                this.map.setPaintProperty(this.lineLayer.id, "line-color", "blue");
+                this.map.getCanvas().style.cursor = "move";
+            }
+
+        });
+
+        this.map?.on("mouseleave", this.lineLayer.id, () => {
+            if (this.map && this.startingDragPos == null) {
+                this.map.setPaintProperty(this.lineLayer.id, "line-color", "red");
+                this.map.getCanvas().style.cursor = "grab";
+            }
+        });
+
+        this.map?.on("mousedown", this.lineLayer.id, (event) => {
+            this.startingDragPos = event.lngLat.toArray();
+            event.preventDefault();
+        });
+
+        this.map?.on("mouseup", () => {
+            if (this.startingDragPos != null && this.map != null) {
+                this.map.setPaintProperty(this.lineLayer.id, "line-color", "red");
+                this.map.getCanvas().style.cursor = "grab";
+                this.startingDragPos = null;
+            }
+        });
+
+        this.map?.on("mousemove", (event) => {
+            if (this.startingDragPos && this.lastMovement < performance.now() - 50) {
+                this.lastMovement = performance.now();
+                const cadGeoJSON = this.getCadGeojson();
+                const updatedFeatureCollection = moveFeatureCollection(cadGeoJSON, event.lngLat.toArray(), this.startingDragPos);
+                this.startingDragPos = event.lngLat.toArray();
+                this.setCadGeojson(updatedFeatureCollection);
+            }
+        });
     }
 
 }
