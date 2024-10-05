@@ -4,11 +4,10 @@ import { Subjects } from "../mapbox/types";
 
 interface CadMapProps {
     file: File;
-    showCad: boolean;
     subjects: Subjects
 }
 
-export function CadMapComponent({ file, showCad, subjects }: CadMapProps) {
+export function CadMapComponent({ file, subjects }: CadMapProps) {
 
     const createdMap = useRef(false);
 
@@ -19,5 +18,5 @@ export function CadMapComponent({ file, showCad, subjects }: CadMapProps) {
         }
     }
 
-    return <div className="map-element" style={{ zIndex: showCad ? 6 : 4 }} ref={onMapElementRender} />
+    return <div className="map-element" ref={onMapElementRender} />
 } 

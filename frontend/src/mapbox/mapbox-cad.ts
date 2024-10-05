@@ -15,6 +15,8 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vc
 
 const CAD_WIDTH_METERS = 100;
 
+const scaleFactor = { latFactor: 0.14761747623608987, longFactor: 0.1089453888215829 }
+
 export class MapboxCad {
     private map: Map | null = null;
 
@@ -25,6 +27,8 @@ export class MapboxCad {
     private startingDragPos: [number, number] | null = null;
 
     private lastMovement = 0;
+
+    private originalTopLeftCoords: [number, number] = [0, 0];
 
     private fillLayer: FillLayerSpecification = {
         id: "fill-layer",
@@ -48,12 +52,13 @@ export class MapboxCad {
     };
 
     constructor(element: HTMLDivElement, file: File, subjects: Subjects) {
-        this.createMap(element, file, subjects.$click);
+        this.createMap(element, file);
         this.setUpSubjects(subjects);
     }
 
-    private async createMap(element: HTMLDivElement, file: File, $click: Subjects["$click"]) {
+    private async createMap(element: HTMLDivElement, file: File) {
         const geojson = await this.loadGeojson(file);
+        this.originalTopLeftCoords = getCornerCoordinate(geojson, "top-left");
         const topLeftCoord = getCornerCoordinate(geojson, "top-left");
         const topRightCoord = getCornerCoordinate(geojson, "top-right");
         const notScaledCadWidth = rhumbDistance(topLeftCoord, topRightCoord, { units: "meters" });
@@ -97,12 +102,6 @@ export class MapboxCad {
             this.map?.fitBounds([one, two, three, four], { duration: 0 });
             this.cadLayerEventListeners();
         });
-
-        this.map.on("click", (e) => {
-            const canvasClick: [number, number] = [e.point.x, e.point.y];
-            const coordinateClick: [number, number] = [e.lngLat.lng, e.lngLat.lat];
-            $click.next({ canvas: canvasClick, lngLat: coordinateClick });
-        })
     }
 
     private addSource(geojson: FeatureCollection) {
@@ -135,18 +134,7 @@ export class MapboxCad {
     }
 
     private setUpSubjects(subjects: Subjects) {
-        subjects.$zoom.subscribe((val) => {
-            if (val === "in") {
-                this.map?.zoomIn();
-            }
-
-            if (val === "out") {
-                this.map?.zoomOut();
-            }
-        })
-
         subjects.$moveCadToCenter.subscribe(() => {
-
             const centerOfMap = this.map?.getCenter();
             const start: [number, number] = [centerOfMap?.lng as number, centerOfMap?.lat as number];
             const featureCollection = this.getCadGeojson();
@@ -156,12 +144,30 @@ export class MapboxCad {
         });
 
         subjects.$rotation.subscribe((rotation) => {
-            const cadGeoJSON = this.getCadGeojson();
-            const resetCadGeoJSON = transformRotate(cadGeoJSON, this.previousRotation * -1);
-            this.previousRotation = rotation;
-            const rotatedGeoJSON = transformRotate(resetCadGeoJSON, rotation);
-            this.setCadGeojson(rotatedGeoJSON);
+            if (!Number.isNaN(rotation)) {
+                const cadGeoJSON = this.getCadGeojson();
+                const resetCadGeoJSON = transformRotate(cadGeoJSON, this.previousRotation * -1);
+                this.previousRotation = rotation;
+                const rotatedGeoJSON = transformRotate(resetCadGeoJSON, rotation);
+                this.setCadGeojson(rotatedGeoJSON);
+            }
         })
+
+        subjects.$geoReferenceCad.subscribe(() => {
+            const cadGeoJSON = this.getCadGeojson();
+            const [topLeftLong, topLeftLat] = getCornerCoordinate(cadGeoJSON, "top-left");
+            const topRight = getCornerCoordinate(cadGeoJSON, "top-right");
+            const bottomLeft = getCornerCoordinate(cadGeoJSON, "bottom-left");
+            const bottomRight = getCornerCoordinate(cadGeoJSON, "bottom-right");
+
+            console.log("this.originalTopLeftCoords", this.originalTopLeftCoords);
+
+            const topLeftCadCoordLong = this.originalTopLeftCoords[0] / scaleFactor.longFactor;
+            const topLeftCadCoordLat = this.originalTopLeftCoords[1] / scaleFactor.latFactor;
+
+            console.log("Top left CAD Long", topLeftCadCoordLong, "Geo Long", topLeftLong);
+            console.log("Top left CAD Lat", topLeftCadCoordLat, "Geo Lat", topLeftLat)
+        });
     }
 
     private getCadGeojson(): FeatureCollection {
