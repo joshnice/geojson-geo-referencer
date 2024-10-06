@@ -9,8 +9,9 @@ import { rhumbBearing } from "@turf/rhumb-bearing"
 import { transformRotate } from "@turf/transform-rotate"
 import { createFeatureCollection } from "../geo-helpers/feature-collection";
 import { getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
-import { moveFeatureCollection } from "../geo-helpers/move-geojson";
-import { optimiseFeatureCollection } from "../geo-helpers/filter-feature-collection";
+import { moveFeatureCollection } from "../geo-helpers/translate-feature-collection";
+import { optimiseFeatureCollectionViaLength } from "../geo-helpers/filter-feature-collection";
+import { parseFileToJSON } from "../file-helpers/file-to-json";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
@@ -58,7 +59,7 @@ export class MapboxCad {
     }
 
     private async createMap(element: HTMLDivElement, file: File) {
-        const geojson = await this.loadGeojson(file);
+        const geojson = await parseFileToJSON<FeatureCollection>(file);
         this.originalTopLeftCoords = getCornerCoordinate(geojson, "top-left");
         const topLeftCoord = getCornerCoordinate(geojson, "top-left");
         const topRightCoord = getCornerCoordinate(geojson, "top-right");
@@ -82,7 +83,7 @@ export class MapboxCad {
             }
         });
 
-        const filteredFeatureCollection = optimiseFeatureCollection(createFeatureCollection(newFeatures), 1);
+        const filteredFeatureCollection = optimiseFeatureCollectionViaLength(createFeatureCollection(newFeatures), 1);
 
         const [one, two, three, four] = bbox(filteredFeatureCollection);
 
@@ -116,23 +117,6 @@ export class MapboxCad {
 
     private addLayers() {
         this.map?.addLayer(this.lineLayer);
-    }
-
-    private async loadGeojson(file: File): Promise<FeatureCollection> {
-        return new Promise((res) => {
-            const reader = new FileReader();
-            let geojson;
-
-            reader.onload = function (e) {
-                if (e.target != null) {
-                    const fileContent = e.target.result;
-                    geojson = eval(`(${fileContent})`);
-                    res(geojson);
-                }
-            }
-
-            reader.readAsText(file);
-        })
     }
 
     private setUpSubjects(subjects: Subjects) {
