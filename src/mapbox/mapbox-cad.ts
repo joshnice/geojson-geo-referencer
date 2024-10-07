@@ -7,7 +7,7 @@ import { rhumbDistance } from "@turf/rhumb-distance"
 import { rhumbDestination } from "@turf/rhumb-destination"
 import { rhumbBearing } from "@turf/rhumb-bearing"
 import { transformRotate } from "@turf/transform-rotate"
-import { createFeatureCollection } from "../geo-helpers/feature-collection";
+import { createFeatureCollection, parseNonValidGeoJSON } from "../geo-helpers/feature-collection";
 import { getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import { moveFeatureCollection } from "../geo-helpers/translate-feature-collection";
 import { optimiseFeatureCollectionViaLength } from "../geo-helpers/filter-feature-collection";
@@ -59,7 +59,7 @@ export class MapboxCad {
     }
 
     private async createMap(element: HTMLDivElement, file: File) {
-        const geojson = await parseFileToJSON<FeatureCollection>(file);
+        const geojson = await parseNonValidGeoJSON(file);
         this.originalTopLeftCoords = getCornerCoordinate(geojson, "top-left");
         const topLeftCoord = getCornerCoordinate(geojson, "top-left");
         const topRightCoord = getCornerCoordinate(geojson, "top-right");

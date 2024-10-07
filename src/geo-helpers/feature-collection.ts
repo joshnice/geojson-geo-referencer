@@ -44,7 +44,7 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(featureCollec
     return { highestLong, highestLat, lowestLat, lowestLong }
 }
 
-export async function parseNonValidGeoJSON(file: File) {
+export async function parseNonValidGeoJSON(file: File): Promise<FeatureCollection> {
     const featureCollection = await parseFileToJSON<FeatureCollection>(file);
 
     const { highestLong, highestLat } = findHighestAndLowestCoordinatesInFeatureCollection(featureCollection);

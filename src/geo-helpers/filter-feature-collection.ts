@@ -1,6 +1,7 @@
 import { FeatureCollection, LineString, Feature } from "geojson";
 import { length } from "@turf/length"
 import { flatternFeatureCoordinates } from "./coordinate-helpers";
+import { createFeatureCollection } from "./feature-collection";
 
 export function optimiseFeatureCollectionViaLength(featureCollection: FeatureCollection, filterLength: number): FeatureCollection {
     const filteredFeatures: Feature<LineString>[] = [];
@@ -26,7 +27,7 @@ export function filterCoordinatesViaMaxLongLat(featureCollection: FeatureCollect
         }
         return validFeatures;
     }, []);
-    return { type: "FeatureCollection", features: validFeatures };
+    return createFeatureCollection(validFeatures);
 }
 
 export function calculateAdjustedAverage(avg: number, low: number, high: number) {
