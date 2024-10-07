@@ -53,12 +53,16 @@ export async function transformNonValidGeoJSONToValid(file: File): Promise<{
 }> {
 	const featureCollection = await parseFileToJSON<FeatureCollection>(file);
 
-	const { highestLong, highestLat } =
+	const { highestLong, highestLat, lowestLat, lowestLong } =
 		findHighestAndLowestCoordinatesInFeatureCollection(featureCollection);
 
-	const longFactor = 180 / highestLong;
+	const unsignedLowestLong = lowestLong * -1;
+	const highestUnsignedLong = highestLong > unsignedLowestLong ? highestLong : unsignedLowestLong;
+	const unsignedLowestLat = lowestLat * -1;
+	const highestUnsignedLat = highestLat > unsignedLowestLat ? highestLat : unsignedLowestLat;
 
-	const latFactor = 90 / highestLat;
+	const longFactor = 180 / highestUnsignedLong;
+	const latFactor = 90 / highestUnsignedLat;
 
 	const features = featureCollection.features.map((feature) =>
 		modifyFeatureWithFactor(feature, longFactor, latFactor),
