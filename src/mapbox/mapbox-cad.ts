@@ -7,17 +7,13 @@ import { rhumbDistance } from "@turf/rhumb-distance"
 import { rhumbDestination } from "@turf/rhumb-destination"
 import { rhumbBearing } from "@turf/rhumb-bearing"
 import { transformRotate } from "@turf/transform-rotate"
-import { createFeatureCollection, parseNonValidGeoJSON } from "../geo-helpers/feature-collection";
+import { createFeatureCollection, transformNonValidGeoJSONToValid } from "../geo-helpers/feature-collection";
 import { getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import { moveFeatureCollection } from "../geo-helpers/translate-feature-collection";
 import { optimiseFeatureCollectionViaLength } from "../geo-helpers/filter-feature-collection";
-import { parseFileToJSON } from "../file-helpers/file-to-json";
-
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
 const CAD_WIDTH_METERS = 100;
-
-const scaleFactor = { latFactor: 0.14761747623608987, longFactor: 0.1089453888215829 }
 
 export class MapboxCad {
     private map: Map | null = null;
@@ -31,6 +27,8 @@ export class MapboxCad {
     private lastMovement = 0;
 
     private originalTopLeftCoords: [number, number] = [0, 0];
+
+    private originalCadScaleFactor: { latFactor: number, longFactor: number } = { latFactor: 0, longFactor: 0 };
 
     private fillLayer: FillLayerSpecification = {
         id: "fill-layer",
@@ -59,7 +57,8 @@ export class MapboxCad {
     }
 
     private async createMap(element: HTMLDivElement, file: File) {
-        const geojson = await parseNonValidGeoJSON(file);
+        const {featureCollection: geojson, scaleFactor} = await transformNonValidGeoJSONToValid(file);
+        this.originalCadScaleFactor = scaleFactor;
         this.originalTopLeftCoords = getCornerCoordinate(geojson, "top-left");
         const topLeftCoord = getCornerCoordinate(geojson, "top-left");
         const topRightCoord = getCornerCoordinate(geojson, "top-right");
@@ -148,8 +147,8 @@ export class MapboxCad {
 
             console.log("this.originalTopLeftCoords", this.originalTopLeftCoords);
 
-            const topLeftCadCoordLong = this.originalTopLeftCoords[0] / scaleFactor.longFactor;
-            const topLeftCadCoordLat = this.originalTopLeftCoords[1] / scaleFactor.latFactor;
+            const topLeftCadCoordLong = this.originalTopLeftCoords[0] / this.originalCadScaleFactor.longFactor;
+            const topLeftCadCoordLat = this.originalTopLeftCoords[1] / this.originalCadScaleFactor.latFactor;
 
             console.log("Top left CAD Long", topLeftCadCoordLong, "Geo Long", topLeftLong);
             console.log("Top left CAD Lat", topLeftCadCoordLat, "Geo Lat", topLeftLat)

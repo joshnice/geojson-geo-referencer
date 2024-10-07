@@ -44,7 +44,7 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(featureCollec
     return { highestLong, highestLat, lowestLat, lowestLong }
 }
 
-export async function parseNonValidGeoJSON(file: File): Promise<FeatureCollection> {
+export async function transformNonValidGeoJSONToValid(file: File): Promise<{featureCollection: FeatureCollection, scaleFactor: { latFactor: number, longFactor: number }}> {
     const featureCollection = await parseFileToJSON<FeatureCollection>(file);
 
     const { highestLong, highestLat } = findHighestAndLowestCoordinatesInFeatureCollection(featureCollection);
@@ -64,5 +64,5 @@ export async function parseNonValidGeoJSON(file: File): Promise<FeatureCollectio
     const longCutOff = calculateAdjustedAverage(geoRefAvgLong, geoReferencedLowestLong, geoReferencedHighestLong);
     const latCutOff = calculateAdjustedAverage(geoRefAvgLat, geoReferenecedLowestLat, geoReferencedHighestLat);
 
-    return filterCoordinatesViaMaxLongLat(scaledFeatureCollection, longCutOff, latCutOff, ["Point"]);
+    return {  featureCollection: filterCoordinatesViaMaxLongLat(scaledFeatureCollection, longCutOff, latCutOff, ["Point"]), scaleFactor: { longFactor, latFactor  }};
 }
