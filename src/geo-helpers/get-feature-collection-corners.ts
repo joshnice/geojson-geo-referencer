@@ -1,5 +1,5 @@
 import { FeatureCollection } from "geojson";
-import { flatternFeatureCoordinates } from "./coordinate-helpers";
+import { flattenFeatureCoordinates } from "./coordinate-helpers";
 
 type CornerPositon = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 
@@ -7,7 +7,7 @@ export function getCornerCoordinate(featureCollection: FeatureCollection, corner
     let cornerCoordinate: [number, number] | null = null;
 
     featureCollection.features.forEach((feature) => {
-        const flatterenedCoordaintes = flatternFeatureCoordinates(feature);
+        const flatterenedCoordaintes = flattenFeatureCoordinates(feature);
         flatterenedCoordaintes.forEach((compCoord) => {
 
             if (cornerCoordinate == null) {

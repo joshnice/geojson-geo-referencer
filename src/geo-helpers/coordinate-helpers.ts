@@ -1,6 +1,6 @@
 import { Feature } from "geojson"
 
-export function flatternFeatureCoordinates(feature: Feature) {
+export function flattenFeatureCoordinates(feature: Feature) {
     switch (feature.geometry.type) {
         case "Point":
             return [feature.geometry.coordinates];

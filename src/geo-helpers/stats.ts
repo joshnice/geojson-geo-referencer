@@ -1,5 +1,5 @@
 import { FeatureCollection } from "geojson";
-import { flatternFeatureCoordinates } from "./coordinate-helpers";
+import { flattenFeatureCoordinates } from "./coordinate-helpers";
 
 export function getAvgLongLat(featureCollection: FeatureCollection) {
     let longTot = 0;
@@ -8,7 +8,7 @@ export function getAvgLongLat(featureCollection: FeatureCollection) {
 
     featureCollection.features.forEach((feature) => {
 
-        const flatternedCoordinates = flatternFeatureCoordinates(feature);
+        const flatternedCoordinates = flattenFeatureCoordinates(feature);
 
         flatternedCoordinates.forEach(([long, lat]) => {
             coordCount += 1;

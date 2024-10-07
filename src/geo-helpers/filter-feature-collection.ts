@@ -1,6 +1,6 @@
 import { FeatureCollection, LineString, Feature } from "geojson";
 import { length } from "@turf/length"
-import { flatternFeatureCoordinates } from "./coordinate-helpers";
+import { flattenFeatureCoordinates } from "./coordinate-helpers";
 import { createFeatureCollection } from "./feature-collection";
 
 export function optimiseFeatureCollectionViaLength(featureCollection: FeatureCollection, filterLength: number): FeatureCollection {
@@ -21,7 +21,7 @@ export function filterCoordinatesViaMaxLongLat(featureCollection: FeatureCollect
     const validFeatures: Feature[] = [];
     featureCollection.features.forEach((feature) => {
         const validFilterType = !filterGeomType.includes(feature.geometry.type);
-        const validCoords = !flatternFeatureCoordinates(feature).some(([long, lat]) => long > maxLong || lat > maxLat);
+        const validCoords = !flattenFeatureCoordinates(feature).some(([long, lat]) => long > maxLong || lat > maxLat);
         if (validFilterType && validCoords) {
             validFeatures.push(feature);
         }

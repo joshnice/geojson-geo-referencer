@@ -1,5 +1,5 @@
 import { FeatureCollection, Feature } from "geojson";
-import { flatternFeatureCoordinates } from "./coordinate-helpers";
+import { flattenFeatureCoordinates } from "./coordinate-helpers";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
 import { modifyFeatureWithFactor } from "./translate-feature";
 import { calculateAdjustedAverage, filterCoordinatesViaMaxLongLat } from "./filter-feature-collection";
@@ -17,9 +17,9 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(featureCollec
 
     featureCollection.features.forEach((feature) => {
 
-        const flatternedCoordinates = flatternFeatureCoordinates(feature);
+        const flattenedCoordinates = flattenFeatureCoordinates(feature);
 
-        flatternedCoordinates.forEach(([long, lat]) => {
+        flattenedCoordinates.forEach(([long, lat]) => {
 
             if (long > highestLong) {
                 highestLong = long;
@@ -46,7 +46,7 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(featureCollec
 
 export async function transformNonValidGeoJSONToValid(file: File): Promise<{featureCollection: FeatureCollection, scaleFactor: { latFactor: number, longFactor: number }}> {
     const featureCollection = await parseFileToJSON<FeatureCollection>(file);
-
+    
     const { highestLong, highestLat } = findHighestAndLowestCoordinatesInFeatureCollection(featureCollection);
 
     const longFactor = 180 / highestLong;
