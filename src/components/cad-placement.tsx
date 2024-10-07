@@ -3,12 +3,13 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
 import { useRef, useState } from "react";
 import { Subject } from "rxjs";
+import { CadUploadOptions } from "../types/cad-upload-types";
 
 interface CadPlacementProps {
-	file: File;
+	options: CadUploadOptions;
 }
 
-export function CadPlacementComponent({ file }: CadPlacementProps) {
+export function CadPlacementComponent({ options }: CadPlacementProps) {
 	const [rotation, setRotation] = useState(0);
 
 	const $moveCadCenter = useRef(new Subject<void>());
@@ -45,7 +46,7 @@ export function CadPlacementComponent({ file }: CadPlacementProps) {
 					$rotation: $rotationRef.current,
 					$geoReferenceCad: $geoReferenceCad.current,
 				}}
-				file={file}
+				cadUploadOptions={options}
 			/>
 		</div>
 	);

@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { FileUploadComponent } from "./components/file-upload";
 import { CadPlacementComponent } from "./components/cad-placement";
+import { CadUploadComponent } from "./components/cad-upload-options/cad-upload-options";
+import { CadUploadOptions } from "./types/cad-upload-types";
 
 function App() {
-	const [file, setFile] = useState<File | null>(null);
+	const [options, setOptions] = useState<CadUploadOptions | null>(null);
 
 	return (
 		<div className="root">
-			{file == null && <FileUploadComponent onFileUpload={setFile} />}
-			{file != null && <CadPlacementComponent file={file} />}
+			{options == null && <CadUploadComponent onConfirmClicked={setOptions} />}
+			{options != null && <CadPlacementComponent options={options} />}
 		</div>
 	);
 }

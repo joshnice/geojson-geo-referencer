@@ -1,10 +1,12 @@
 import { ChangeEvent, useReducer } from "react";
+import { initialState, reducer } from "./cad-upload-state";
+import { CadUploadOptions } from "../../types/cad-upload-types";
 
 interface FileUploadProps {
-	onFileUpload: (file: CadUploadOptions) => void;
+	onConfirmClicked: (options: CadUploadOptions) => void;
 }
 
-export function FileUploadComponent({ onFileUpload }: FileUploadProps) {
+export function CadUploadComponent({ onConfirmClicked }: FileUploadProps) {
 	const [state, dispatch] = useReducer(reducer, initialState);
 
 	const handleCadGeoJSONUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -29,7 +31,7 @@ export function FileUploadComponent({ onFileUpload }: FileUploadProps) {
 	};
 
 	return (
-		<div>
+		<div className="geojson-options">
 			<div>
 				Cad geoJSON <input type="file" onChange={handleCadGeoJSONUpload} />
 			</div>
@@ -40,45 +42,11 @@ export function FileUploadComponent({ onFileUpload }: FileUploadProps) {
 				Width of CAD (meters)
 				<input type="number" onChange={handleWidthChange} />
 			</div>
-			<button onClick={() => onFileUpload(state)}>Start</button>
+			<button onClick={() => onConfirmClicked(state)}>Start</button>
 		</div>
 	);
 }
 
-type CadUploadOptions = {
-	geojsonFile: File | null;
-	styleFile: File | null;
-	width: number;
-};
 
-type FileChangeAction = {
-	type: "geojson" | "style";
-	payload: File;
-};
 
-type WidthChangeAction = {
-	type: "width";
-	payload: number;
-};
 
-const initialState: CadUploadOptions = {
-	geojsonFile: null,
-	styleFile: null,
-	width: 0,
-};
-
-function reducer(
-	state: CadUploadOptions,
-	action: FileChangeAction | WidthChangeAction,
-): CadUploadOptions {
-	switch (action.type) {
-		case "geojson":
-			return { ...state, geojsonFile: action.payload };
-		case "style":
-			return { ...state, styleFile: action.payload };
-		case "width":
-			return { ...state, width: action.payload };
-		default:
-			return state;
-	}
-}

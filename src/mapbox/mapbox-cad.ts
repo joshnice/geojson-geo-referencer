@@ -1,7 +1,9 @@
 import mapboxgl, {
 	FillLayerSpecification,
+	Layer,
 	LineLayerSpecification,
 	Map,
+	StyleSpecification,
 } from "mapbox-gl";
 import { FeatureCollection, Feature } from "geojson";
 import { Subjects } from "./types";
@@ -18,10 +20,10 @@ import {
 import { getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import { moveFeatureCollection } from "../geo-helpers/translate-feature-collection";
 import { optimiseFeatureCollectionViaLength } from "../geo-helpers/filter-feature-collection";
+import { parseFileToJSON } from "../file-helpers/file-to-json";
+
 mapboxgl.accessToken =
 	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
-
-const CAD_WIDTH_METERS = 100;
 
 export class MapboxCad {
 	private map: Map | null = null;
@@ -40,6 +42,8 @@ export class MapboxCad {
 		latFactor: 0,
 		longFactor: 0,
 	};
+
+	private layers: Layer[] = [];
 
 	private fillLayer: FillLayerSpecification = {
 		id: "fill-layer",
@@ -62,14 +66,17 @@ export class MapboxCad {
 		filter: ["==", ["geometry-type"], "LineString"],
 	};
 
-	constructor(element: HTMLDivElement, file: File, subjects: Subjects) {
-		this.createMap(element, file);
+	private readonly cadWidth: number;
+
+	constructor(element: HTMLDivElement, cadGeojson: File, cadStyle: File | null, cadWidth: number, subjects: Subjects) {
+		this.createMap(element, cadGeojson, cadStyle);
 		this.setUpSubjects(subjects);
+		this.cadWidth = cadWidth;
 	}
 
-	private async createMap(element: HTMLDivElement, file: File) {
+	private async createMap(element: HTMLDivElement, geoJSONFile: File, cadStyleFile: File | null) {
 		const { featureCollection: geojson, scaleFactor } =
-			await transformNonValidGeoJSONToValid(file);
+			await transformNonValidGeoJSONToValid(geoJSONFile);
 		this.originalCadScaleFactor = scaleFactor;
 		this.originalTopLeftCoords = getCornerCoordinate(geojson, "top-left");
 		const topLeftCoord = getCornerCoordinate(geojson, "top-left");
@@ -77,7 +84,7 @@ export class MapboxCad {
 		const notScaledCadWidth = rhumbDistance(topLeftCoord, topRightCoord, {
 			units: "meters",
 		});
-		const widthScaleFactor = CAD_WIDTH_METERS / notScaledCadWidth;
+		const widthScaleFactor = this.cadWidth / notScaledCadWidth;
 
 		const newFeatures: Feature[] = [];
 		geojson.features.forEach((feature) => {
@@ -126,9 +133,13 @@ export class MapboxCad {
 
 		this.map.doubleClickZoom.disable();
 
+		console.log("cadStyleFile", cadStyleFile);
+		const styleSpec = cadStyleFile ? await parseFileToJSON<StyleSpecification>(cadStyleFile) : null;
+		console.log("styleSpec", styleSpec);
+
 		this.map.once("idle", () => {
 			this.addSource(filteredFeatureCollection);
-			this.addLayers();
+			this.addLayers(styleSpec ? styleSpec.layers : []);
 			this.map?.fitBounds([one, two, three, four], { duration: 0 });
 			this.cadLayerEventListeners();
 		});
@@ -141,8 +152,17 @@ export class MapboxCad {
 		});
 	}
 
-	private addLayers() {
-		this.map?.addLayer(this.lineLayer);
+	private addLayers(layers: Layer[]) {
+		console.log("layers", layers);
+		if (layers.length !== 0) {
+			layers.forEach((l) => {
+				l.source = this.sourceId;
+				delete l["source-layer"];
+				this.map?.addLayer(l);
+			})
+		} else {
+			this.map?.addLayer(this.lineLayer);
+		}
 	}
 
 	private setUpSubjects(subjects: Subjects) {
