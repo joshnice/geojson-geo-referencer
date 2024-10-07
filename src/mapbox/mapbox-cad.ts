@@ -1,5 +1,4 @@
 import mapboxgl, {
-	FillLayerSpecification,
 	Layer,
 	LineLayerSpecification,
 	Map,
@@ -41,18 +40,6 @@ export class MapboxCad {
 	private originalCadScaleFactor: { latFactor: number; longFactor: number } = {
 		latFactor: 0,
 		longFactor: 0,
-	};
-
-	private layers: Layer[] = [];
-
-	private fillLayer: FillLayerSpecification = {
-		id: "fill-layer",
-		type: "fill",
-		paint: {
-			"fill-color": "green",
-		},
-		source: this.sourceId,
-		filter: ["==", ["geometry-type"], "Polygon"],
 	};
 
 	private lineLayer: LineLayerSpecification = {
@@ -109,7 +96,7 @@ export class MapboxCad {
 				newFeatures.push({
 					type: "Feature",
 					geometry: { coordinates: newCoords, type: "LineString" },
-					properties: {},
+					properties: feature.properties,
 				});
 			}
 		});
@@ -201,9 +188,10 @@ export class MapboxCad {
 				cadGeoJSON,
 				"top-left",
 			);
-			const topRight = getCornerCoordinate(cadGeoJSON, "top-right");
-			const bottomLeft = getCornerCoordinate(cadGeoJSON, "bottom-left");
-			const bottomRight = getCornerCoordinate(cadGeoJSON, "bottom-right");
+			// Todo: Add other references
+			// const topRight = getCornerCoordinate(cadGeoJSON, "top-right");
+			// const bottomLeft = getCornerCoordinate(cadGeoJSON, "bottom-left");
+			// const bottomRight = getCornerCoordinate(cadGeoJSON, "bottom-right");
 
 			console.log("this.originalTopLeftCoords", this.originalTopLeftCoords);
 
