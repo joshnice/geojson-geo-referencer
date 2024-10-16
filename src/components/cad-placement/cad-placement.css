@@ -18,6 +18,10 @@
 	flex-direction: column;
 }
 
+.number-input {
+	width: 100px;
+}
+
 .control-option {
 	display: flex;
 	gap: 10px;

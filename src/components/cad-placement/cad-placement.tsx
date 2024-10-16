@@ -23,8 +23,12 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 
 	const handleRotationChange = (valStr: string) => {
 		const valNumber = Number.parseFloat(valStr);
-		$rotationRef.current.next(valNumber);
-		setRotation(valNumber);
+		if (!Number.isNaN(valNumber)) {
+			const clampedNumber = valNumber > 360 ? 360 : valNumber
+			$rotationRef.current.next(clampedNumber);
+			setRotation(clampedNumber);
+		}
+
 	};
 
 	const onCadMapElementRender = (containerElement: HTMLDivElement) => {
@@ -58,6 +62,10 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				<div className="control-option">
 					Show Cad
 					<input type="checkbox" checked={showCad} onChange={() => setShowCad(!showCad)} />
+				</div>
+				<div className="control-option">
+					Rotation
+					<input className="number-input" type="number" value={rotation} onChange={(event) => handleRotationChange(event.target.value)} />
 				</div>
 			</div>
 			<div className="map-element" style={{ zIndex: showCad ? 2 : 0 }} ref={onCadMapElementRender} />

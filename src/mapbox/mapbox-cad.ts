@@ -99,7 +99,7 @@ export class MapboxCad {
 
 	private setUpSubjects(subjects: Subjects) {
 		subjects.$rotation.subscribe((rotation) => {
-			console.log("rotation", rotation);
+			this.map?.setBearing(rotation);
 		});
 
 		subjects.$geoReferenceCad.subscribe(() => {
