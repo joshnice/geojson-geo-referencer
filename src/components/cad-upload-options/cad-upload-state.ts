@@ -1,4 +1,4 @@
-import { CadUploadOptions } from "../../types/cad-upload-types";
+import type { CadUploadOptions } from "../../types/cad-upload-types";
 
 type FileChangeAction = {
     type: "geojson" | "style";
@@ -13,7 +13,6 @@ type WidthChangeAction = {
 export const initialState: CadUploadOptions = {
     geojsonFile: null,
     styleFile: null,
-    width: 0,
 };
 
 export function reducer(
@@ -25,8 +24,6 @@ export function reducer(
             return { ...state, geojsonFile: action.payload };
         case "style":
             return { ...state, styleFile: action.payload };
-        case "width":
-            return { ...state, width: action.payload };
         default:
             return state;
     }

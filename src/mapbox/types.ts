@@ -1,7 +1,6 @@
-import { Subject } from "rxjs";
+import type { Subject } from "rxjs";
 
 export interface Subjects {
-	$moveCadToCenter: Subject<void>;
 	$rotation: Subject<number>;
 	$geoReferenceCad: Subject<void>;
 }

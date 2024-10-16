@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { CadPlacementComponent } from "./components/cad-placement";
 import { CadUploadComponent } from "./components/cad-upload-options/cad-upload-options";
-import { CadUploadOptions } from "./types/cad-upload-types";
+import type { CadUploadOptions } from "./types/cad-upload-types";
+import { CadPlacementComponent } from "./components/cad-placement/cad-placement";
 
 function App() {
 	const [options, setOptions] = useState<CadUploadOptions | null>(null);
