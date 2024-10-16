@@ -92,9 +92,7 @@ export class MapboxCad {
 
 		this.map.doubleClickZoom.disable();
 
-		console.log("cadStyleFile", cadStyleFile);
 		const styleSpec = cadStyleFile ? await parseFileToJSON<StyleSpecification>(cadStyleFile) : null;
-		console.log("styleSpec", styleSpec);
 
 		this.map.once("idle", () => {
 			this.addSource(transformedFeatureCollection);
@@ -111,7 +109,6 @@ export class MapboxCad {
 	}
 
 	private addLayers(layers: Layer[]) {
-		console.log("layers", layers);
 		if (layers.length !== 0) {
 			// biome-ignore lint/complexity/noForEach: <explanation>
 			layers.forEach((l) => {
