@@ -12,10 +12,13 @@ interface CadPlacementProps {
 
 export function CadPlacementComponent({ options }: CadPlacementProps) {
 	const [rotation, setRotation] = useState(0);
-	const [showCad, setShowCad] = useState(true);
+	const [showCad, setShowCad] = useState(false);
+	const [lockCadPosition, setLockCadPosition] = useState(false);
 
 	const $rotationRef = useRef(new Subject<number>());
 	const $geoReferenceCad = useRef(new Subject<void>());
+	const $eventLock = useRef(new Subject<MouseEvent>());
+	const $lockCadPosition = useRef(new Subject<boolean>())
 
 	const createdCadMap = useRef(false);
 	const createdBackgroundMap = useRef(false);
@@ -28,8 +31,13 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 			$rotationRef.current.next(clampedNumber);
 			setRotation(clampedNumber);
 		}
-
 	};
+
+	const handleLockCad = () => {
+		const updatedValue = !lockCadPosition;
+		setLockCadPosition(updatedValue);
+		$lockCadPosition.current.next(updatedValue);
+	}
 
 	const onCadMapElementRender = (containerElement: HTMLDivElement) => {
 		if (!createdCadMap.current) {
@@ -42,6 +50,8 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 			new MapboxCad(containerElement, options.geojsonFile, options.styleFile, {
 				$rotation: $rotationRef.current,
 				$geoReferenceCad: $geoReferenceCad.current,
+				$eventLock: $eventLock.current,
+				$lockCadPosition: $lockCadPosition.current
 			});
 		}
 	};
@@ -52,6 +62,8 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 			new MapboxBackground(containerElement, {
 				$rotation: $rotationRef.current,
 				$geoReferenceCad: $geoReferenceCad.current,
+				$eventLock: $eventLock.current,
+				$lockCadPosition: $lockCadPosition.current
 			});
 		}
 	}
@@ -62,6 +74,10 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				<div className="control-option">
 					Show Cad
 					<input type="checkbox" checked={showCad} onChange={() => setShowCad(!showCad)} />
+				</div>
+				<div className="control-option">
+					Lock Cad
+					<input type="checkbox" checked={lockCadPosition} onChange={() => handleLockCad()} />
 				</div>
 				<div className="control-option">
 					Rotation

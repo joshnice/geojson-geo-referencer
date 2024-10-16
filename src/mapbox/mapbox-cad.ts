@@ -11,8 +11,8 @@ import { bbox } from "@turf/bbox";
 import {
 	transformNonValidGeoJSONToValid,
 } from "../geo-helpers/feature-collection";
-import { getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
+import type { Subject } from "rxjs";
 
 mapboxgl.accessToken =
 	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
@@ -21,8 +21,6 @@ export class MapboxCad {
 	private map: Map | null = null;
 
 	private sourceId = "cad-source";
-
-	private originalTopLeftCoords: [number, number] = [0, 0];
 
 	private originalCadScaleFactor: { latFactor: number; longFactor: number } = {
 		latFactor: 0,
@@ -39,6 +37,10 @@ export class MapboxCad {
 		source: this.sourceId,
 		filter: ["==", ["geometry-type"], "LineString"],
 	};
+
+	private $eventLock: Subject<MouseEvent> | null = null;
+
+	private lockCadPosition = false;
 
 	constructor(element: HTMLDivElement, cadGeojson: File, cadStyle: File | null, subjects: Subjects) {
 		this.createMap(element, cadGeojson, cadStyle);
@@ -60,6 +62,32 @@ export class MapboxCad {
 			maxPitch: 0,
 			style: { layers: [], sources: {}, version: 8 },
 			maxZoom: 24,
+		});
+
+		const canvasElement = this.map.getCanvas();
+
+		canvasElement.addEventListener("mousedown", (event) => {
+			if (this.lockCadPosition) {
+				this.$eventLock?.next(event);
+			}
+		});
+
+		canvasElement.addEventListener("mouseup", (event) => {
+			if (this.lockCadPosition) {
+				this.$eventLock?.next(event);
+			}
+		});
+
+		canvasElement.addEventListener("mousemove", (event) => {
+			if (this.lockCadPosition) {
+				this.$eventLock?.next(event);
+			}
+		});
+
+		canvasElement.addEventListener("wheel", (event) => {
+			if (this.lockCadPosition) {
+				this.$eventLock?.next(event);
+			}
 		});
 
 		this.map.doubleClickZoom.disable();
@@ -102,36 +130,14 @@ export class MapboxCad {
 			this.map?.setBearing(rotation);
 		});
 
-		subjects.$geoReferenceCad.subscribe(() => {
-			const cadGeoJSON = this.getCadGeojson();
-			const [topLeftLong, topLeftLat] = getCornerCoordinate(
-				cadGeoJSON,
-				"top-left",
-			);
-			// Todo: Add other references
-			// const topRight = getCornerCoordinate(cadGeoJSON, "top-right");
-			// const bottomLeft = getCornerCoordinate(cadGeoJSON, "bottom-left");
-			// const bottomRight = getCornerCoordinate(cadGeoJSON, "bottom-right");
-
-			console.log("this.originalTopLeftCoords", this.originalTopLeftCoords);
-
-			const topLeftCadCoordLong =
-				this.originalTopLeftCoords[0] / this.originalCadScaleFactor.longFactor;
-			const topLeftCadCoordLat =
-				this.originalTopLeftCoords[1] / this.originalCadScaleFactor.latFactor;
-
-			console.log(
-				"Top left CAD Long",
-				topLeftCadCoordLong,
-				"Geo Long",
-				topLeftLong,
-			);
-			console.log(
-				"Top left CAD Lat",
-				topLeftCadCoordLat,
-				"Geo Lat",
-				topLeftLat,
-			);
+		subjects.$lockCadPosition.subscribe((lock) => {
+			this.lockCadPosition = lock;
 		});
+
+		subjects.$geoReferenceCad.subscribe(() => {
+			// Todo: add georeferences
+		});
+
+		this.$eventLock = subjects.$eventLock;
 	}
 }

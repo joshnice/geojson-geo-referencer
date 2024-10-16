@@ -23,5 +23,18 @@ export class MapboxBackground {
     }
 
     private setUpSubjects(subjects: Subjects) {
+        subjects.$eventLock.subscribe((event) => {
+            const canvasElement = this.map.getCanvas();
+            let newEvent: WheelEvent | MouseEvent | null = null;
+            switch (event.type) {
+                case "wheel":
+                    newEvent = new WheelEvent(event.type, event);
+                    break;
+                default:
+                    newEvent = new MouseEvent(event.type, event);
+
+            }
+            canvasElement.dispatchEvent(newEvent);
+        });
     }
 }
