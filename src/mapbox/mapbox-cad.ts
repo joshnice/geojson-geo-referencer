@@ -51,6 +51,7 @@ export class MapboxCad {
 		const { featureCollection: transformedFeatureCollection, scaleFactor } =
 			await transformNonValidGeoJSONToValid(geoJSONFile);
 
+		this.originalCadScaleFactor = scaleFactor;
 
 		const [one, two, three, four] = bbox(transformedFeatureCollection);
 

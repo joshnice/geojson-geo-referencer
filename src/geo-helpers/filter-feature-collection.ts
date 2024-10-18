@@ -1,23 +1,6 @@
-import { FeatureCollection, LineString, Feature } from "geojson";
-import { length } from "@turf/length";
+import type { FeatureCollection, Feature } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
 import { createFeatureCollection } from "./feature-collection";
-
-export function optimiseFeatureCollectionViaLength(
-	featureCollection: FeatureCollection,
-	filterLength: number,
-): FeatureCollection {
-	const filteredFeatures: Feature<LineString>[] = [];
-	featureCollection.features.forEach((feature) => {
-		if (feature.geometry.type === "LineString") {
-			const lengthOfLine = length(feature, { units: "meters" });
-			if (lengthOfLine > filterLength) {
-				filteredFeatures.push(feature as Feature<LineString>);
-			}
-		}
-	});
-	return { type: "FeatureCollection", features: filteredFeatures };
-}
 
 export function filterCoordinatesViaMaxLongLat(
 	featureCollection: FeatureCollection,
@@ -26,6 +9,7 @@ export function filterCoordinatesViaMaxLongLat(
 	filterGeomType: Feature["geometry"]["type"][],
 ) {
 	const validFeatures: Feature[] = [];
+	// biome-ignore lint/complexity/noForEach: <explanation>
 	featureCollection.features.forEach((feature) => {
 		const validFilterType = !filterGeomType.includes(feature.geometry.type);
 		const validCoords = !flattenFeatureCoordinates(feature).some(

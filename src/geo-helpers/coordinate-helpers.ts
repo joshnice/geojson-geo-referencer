@@ -1,4 +1,4 @@
-import { Feature } from "geojson";
+import type { Feature } from "geojson";
 
 export function flattenFeatureCoordinates(feature: Feature) {
 	switch (feature.geometry.type) {

@@ -1,4 +1,4 @@
-import { Feature } from "geojson";
+import type { Feature } from "geojson";
 
 export function modifyFeatureWithFactor(
 	feature: Feature,

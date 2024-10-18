@@ -1,4 +1,4 @@
-import { FeatureCollection } from "geojson";
+import type { FeatureCollection } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
 
 export function getAvgLongLat(featureCollection: FeatureCollection) {

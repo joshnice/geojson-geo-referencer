@@ -15,6 +15,7 @@ export class MapboxBackground {
             center: [0, 0],
             zoom: 2,
             projection: "mercator",
+            style: "mapbox://styles/mapbox/dark-v11",
             maxPitch: 0,
         });
 

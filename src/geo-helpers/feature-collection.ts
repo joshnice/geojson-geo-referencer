@@ -1,4 +1,4 @@
-import { FeatureCollection, Feature } from "geojson";
+import type { FeatureCollection, Feature } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
 import { modifyFeatureWithFactor } from "./translate-feature";
@@ -6,7 +6,7 @@ import {
 	calculateAdjustedAverage,
 	filterCoordinatesViaMaxLongLat,
 } from "./filter-feature-collection";
-import { getAvgLongLat } from "./stats";
+import { getAvgLongLat } from "./feature-collection-stats";
 
 export function createFeatureCollection(
 	features: Feature[],
@@ -17,10 +17,10 @@ export function createFeatureCollection(
 export function findHighestAndLowestCoordinatesInFeatureCollection(
 	featureCollection: FeatureCollection,
 ) {
-	let highestLong = -Infinity;
-	let highestLat = -Infinity;
-	let lowestLong = Infinity;
-	let lowestLat = Infinity;
+	let highestLong = Number.NEGATIVE_INFINITY;
+	let highestLat = Number.NEGATIVE_INFINITY;
+	let lowestLong = Number.POSITIVE_INFINITY;
+	let lowestLat = Number.POSITIVE_INFINITY;
 
 	featureCollection.features.forEach((feature) => {
 		const flattenedCoordinates = flattenFeatureCoordinates(feature);
@@ -61,8 +61,8 @@ export async function transformNonValidGeoJSONToValid(file: File): Promise<{
 	const unsignedLowestLat = lowestLat * -1;
 	const highestUnsignedLat = highestLat > unsignedLowestLat ? highestLat : unsignedLowestLat;
 
-	const longFactor = 180 / highestUnsignedLong;
-	const latFactor = 90 / highestUnsignedLat;
+	const longFactor = 2 / highestUnsignedLong;
+	const latFactor = 1 / highestUnsignedLat;
 
 	const features = featureCollection.features.map((feature) =>
 		modifyFeatureWithFactor(feature, longFactor, latFactor),
@@ -88,6 +88,7 @@ export async function transformNonValidGeoJSONToValid(file: File): Promise<{
 		geoReferencedLowestLong,
 		geoReferencedHighestLong,
 	);
+
 	const latCutOff = calculateAdjustedAverage(
 		geoRefAvgLat,
 		geoReferenecedLowestLat,
@@ -95,6 +96,7 @@ export async function transformNonValidGeoJSONToValid(file: File): Promise<{
 	);
 
 	return {
+		// Ideally we would not use this
 		featureCollection: filterCoordinatesViaMaxLongLat(
 			scaledFeatureCollection,
 			longCutOff,

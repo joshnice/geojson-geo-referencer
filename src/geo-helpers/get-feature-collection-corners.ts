@@ -1,4 +1,4 @@
-import { FeatureCollection } from "geojson";
+import type { FeatureCollection } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
 
 type CornerPositon = "top-left" | "top-right" | "bottom-right" | "bottom-left";
