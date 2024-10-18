@@ -4,5 +4,6 @@ export interface Subjects {
 	$rotation: Subject<number>;
 	$geoReferenceCad: Subject<void>;
 	$eventLock: Subject<MouseEvent>;
-	$lockCadPosition: Subject<boolean>;
+	$moveBackground: Subject<boolean>;
+	$moveCad: Subject<boolean>;
 }

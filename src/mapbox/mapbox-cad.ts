@@ -40,8 +40,6 @@ export class MapboxCad {
 
 	private $eventLock: Subject<MouseEvent> | null = null;
 
-	private lockCadPosition = false;
-
 	constructor(element: HTMLDivElement, cadGeojson: File, cadStyle: File | null, subjects: Subjects) {
 		this.createMap(element, cadGeojson, cadStyle);
 		this.setUpSubjects(subjects);
@@ -65,30 +63,24 @@ export class MapboxCad {
 			maxZoom: 24,
 		});
 
+		this.disableMapMovement();
+
 		const canvasElement = this.map.getCanvas();
 
 		canvasElement.addEventListener("mousedown", (event) => {
-			if (this.lockCadPosition) {
-				this.$eventLock?.next(event);
-			}
+			this.$eventLock?.next(event);
 		});
 
 		canvasElement.addEventListener("mouseup", (event) => {
-			if (this.lockCadPosition) {
-				this.$eventLock?.next(event);
-			}
+			this.$eventLock?.next(event);
 		});
 
 		canvasElement.addEventListener("mousemove", (event) => {
-			if (this.lockCadPosition) {
-				this.$eventLock?.next(event);
-			}
+			this.$eventLock?.next(event);
 		});
 
 		canvasElement.addEventListener("wheel", (event) => {
-			if (this.lockCadPosition) {
-				this.$eventLock?.next(event);
-			}
+			this.$eventLock?.next(event);
 		});
 
 		this.map.doubleClickZoom.disable();
@@ -128,8 +120,12 @@ export class MapboxCad {
 			this.map?.setBearing(rotation);
 		});
 
-		subjects.$lockCadPosition.subscribe((lock) => {
-			this.lockCadPosition = lock;
+		subjects.$moveCad.subscribe((move) => {
+			if (move) {
+				this.enableMapMovement();
+			} else {
+				this.disableMapMovement();
+			}
 		});
 
 		subjects.$geoReferenceCad.subscribe(() => {
@@ -137,5 +133,25 @@ export class MapboxCad {
 		});
 
 		this.$eventLock = subjects.$eventLock;
+	}
+
+	private enableMapMovement() {
+		this.map?.dragPan.enable();
+		this.map?.boxZoom.enable();
+		this.map?.scrollZoom.enable();
+		this.map?.touchZoomRotate.enable();
+		this.map?.dragRotate.enable();
+		this.map?.keyboard.enable();
+		this.map?.doubleClickZoom.enable();
+	}
+
+	private disableMapMovement() {
+		this.map?.dragPan.disable();
+		this.map?.boxZoom.disable();
+		this.map?.scrollZoom.disable();
+		this.map?.touchZoomRotate.disable();
+		this.map?.dragRotate.disable();
+		this.map?.keyboard.disable();
+		this.map?.doubleClickZoom.disable();
 	}
 }

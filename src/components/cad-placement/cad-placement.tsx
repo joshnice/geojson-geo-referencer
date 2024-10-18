@@ -12,13 +12,14 @@ interface CadPlacementProps {
 
 export function CadPlacementComponent({ options }: CadPlacementProps) {
 	const [rotation, setRotation] = useState(0);
-	const [showCad, setShowCad] = useState(false);
-	const [lockCadPosition, setLockCadPosition] = useState(false);
+	const [moveCad, setMoveCad] = useState(false);
+	const [moveBackground, setMoveBackground] = useState(false);
 
 	const $rotationRef = useRef(new Subject<number>());
 	const $geoReferenceCad = useRef(new Subject<void>());
 	const $eventLock = useRef(new Subject<MouseEvent>());
-	const $lockCadPosition = useRef(new Subject<boolean>())
+	const $moveCadPosition = useRef(new Subject<boolean>());
+	const $moveBackgroundPosition = useRef(new Subject<boolean>());
 
 	const createdCadMap = useRef(false);
 	const createdBackgroundMap = useRef(false);
@@ -33,10 +34,16 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 		}
 	};
 
-	const handleLockCad = () => {
-		const updatedValue = !lockCadPosition;
-		setLockCadPosition(updatedValue);
-		$lockCadPosition.current.next(updatedValue);
+	const handleMoveBackground = () => {
+		const updatedValue = !moveBackground;
+		setMoveBackground(updatedValue);
+		$moveBackgroundPosition.current.next(updatedValue);
+	}
+
+	const handleMoveCad = () => {
+		const updatedValue = !moveCad;
+		setMoveCad(updatedValue);
+		$moveCadPosition.current.next(updatedValue);
 	}
 
 	const onCadMapElementRender = (containerElement: HTMLDivElement) => {
@@ -51,7 +58,8 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				$rotation: $rotationRef.current,
 				$geoReferenceCad: $geoReferenceCad.current,
 				$eventLock: $eventLock.current,
-				$lockCadPosition: $lockCadPosition.current
+				$moveBackground: $moveBackgroundPosition.current,
+				$moveCad: $moveCadPosition.current
 			});
 		}
 	};
@@ -63,7 +71,8 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				$rotation: $rotationRef.current,
 				$geoReferenceCad: $geoReferenceCad.current,
 				$eventLock: $eventLock.current,
-				$lockCadPosition: $lockCadPosition.current
+				$moveBackground: $moveBackgroundPosition.current,
+				$moveCad: $moveCadPosition.current
 			});
 		}
 	}
@@ -72,20 +81,20 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 		<div>
 			<div className="controls">
 				<div className="control-option">
-					Show Cad
-					<input type="checkbox" checked={showCad} onChange={() => setShowCad(!showCad)} />
+					Move Cad
+					<input type="checkbox" checked={moveCad} onChange={() => handleMoveCad()} />
 				</div>
 				<div className="control-option">
-					Lock Cad
-					<input type="checkbox" checked={lockCadPosition} onChange={() => handleLockCad()} />
+					Move Background
+					<input type="checkbox" checked={moveBackground} onChange={() => handleMoveBackground()} />
 				</div>
 				<div className="control-option">
 					Rotation
 					<input className="number-input" type="number" value={rotation} onChange={(event) => handleRotationChange(event.target.value)} />
 				</div>
 			</div>
-			<div className="map-element" style={{ zIndex: showCad ? 2 : 0 }} ref={onCadMapElementRender} />
-			<div className="map-element" style={{ zIndex: showCad ? 0 : 2 }} ref={onBackgroundMapElementRender} />
+			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
+			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
 
 		</div>
 	);

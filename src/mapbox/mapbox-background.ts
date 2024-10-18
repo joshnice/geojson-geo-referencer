@@ -8,6 +8,8 @@ export class MapboxBackground {
 
     private readonly map: Map;
 
+    private allowMove = false;
+
     constructor(element: HTMLDivElement, subjects: Subjects) {
 
         this.map = new Map({
@@ -25,7 +27,6 @@ export class MapboxBackground {
 
     private setUpSubjects(subjects: Subjects) {
         subjects.$eventLock.subscribe((event) => {
-            const canvasElement = this.map.getCanvas();
             let newEvent: WheelEvent | MouseEvent | null = null;
             switch (event.type) {
                 case "wheel":
@@ -35,7 +36,14 @@ export class MapboxBackground {
                     newEvent = new MouseEvent(event.type, event);
 
             }
-            canvasElement.dispatchEvent(newEvent);
+            if (this.allowMove) {
+                const canvasElement = this.map.getCanvas();
+                canvasElement.dispatchEvent(newEvent);
+            }
         });
+
+        subjects.$moveBackground.subscribe((move) => {
+            this.allowMove = move;
+        })
     }
 }
