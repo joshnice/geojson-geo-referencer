@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Subject } from "rxjs";
 import { MapboxBackground } from "../../mapbox/mapbox-background";
 import { MapboxCad } from "../../mapbox/mapbox-cad";
 import type { CadUploadOptions } from "../../types/cad-upload-types";
+import type { GeoReferenceCadResult, GetMapBackgroundPosition } from "../../mapbox/types";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
 
@@ -20,9 +21,20 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 	const $eventLock = useRef(new Subject<MouseEvent>());
 	const $moveCadPosition = useRef(new Subject<boolean>());
 	const $moveBackgroundPosition = useRef(new Subject<boolean>());
+	const $getMapBackgroundPostion = useRef(new Subject<GetMapBackgroundPosition>());
+	const $getGeoReferenceValue = useRef(new Subject<GeoReferenceCadResult>())
 
 	const createdCadMap = useRef(false);
 	const createdBackgroundMap = useRef(false);
+
+	useEffect(() => {
+		const sub = $getGeoReferenceValue.current.subscribe((val) => {
+			console.log(val);
+		})
+		return () => {
+			sub.unsubscribe();
+		}
+	}, [])
 
 
 	const handleRotationChange = (valStr: string) => {
@@ -46,6 +58,10 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 		$moveCadPosition.current.next(updatedValue);
 	}
 
+	const handleGeoReferenceCad = () => {
+		$geoReferenceCad.current.next();
+	}
+
 	const onCadMapElementRender = (containerElement: HTMLDivElement) => {
 		if (!createdCadMap.current) {
 			createdCadMap.current = true;
@@ -59,7 +75,9 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				$geoReferenceCad: $geoReferenceCad.current,
 				$eventLock: $eventLock.current,
 				$moveBackground: $moveBackgroundPosition.current,
-				$moveCad: $moveCadPosition.current
+				$moveCad: $moveCadPosition.current,
+				$getMapBackgroundPostion: $getMapBackgroundPostion.current,
+				$getCadRealWorldLocation: $getGeoReferenceValue.current
 			});
 		}
 	};
@@ -72,7 +90,9 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				$geoReferenceCad: $geoReferenceCad.current,
 				$eventLock: $eventLock.current,
 				$moveBackground: $moveBackgroundPosition.current,
-				$moveCad: $moveCadPosition.current
+				$moveCad: $moveCadPosition.current,
+				$getMapBackgroundPostion: $getMapBackgroundPostion.current,
+				$getCadRealWorldLocation: $getGeoReferenceValue.current
 			});
 		}
 	}
@@ -91,6 +111,9 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				<div className="control-option">
 					Rotation
 					<input className="number-input" type="number" value={rotation} onChange={(event) => handleRotationChange(event.target.value)} />
+				</div>
+				<div>
+					<button type="button" onClick={handleGeoReferenceCad}>GeoReference Cad</button>
 				</div>
 			</div>
 			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />

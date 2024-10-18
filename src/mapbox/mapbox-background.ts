@@ -1,6 +1,6 @@
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 import mapboxgl, { Map } from "mapbox-gl";
-import type { Subjects } from "./types";
+import type { GeoReferenceCadResult, Subjects } from "./types";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
@@ -44,6 +44,30 @@ export class MapboxBackground {
 
         subjects.$moveBackground.subscribe((move) => {
             this.allowMove = move;
-        })
+        });
+
+        subjects.$getMapBackgroundPostion.subscribe((pos) => {
+            const realWorldTopRight = this.map.unproject(pos.canvasPositions.topRight)?.toArray();
+            const realWorldTopLeft = this.map.unproject(pos.canvasPositions.topLeft)?.toArray();
+            const realWorldBottomLeft = this.map.unproject(pos.canvasPositions.bottomRight)?.toArray();
+            const realWorldBottomRight = this.map.unproject(pos.canvasPositions.bottomLeft)?.toArray();
+
+            const realWorldLocation: GeoReferenceCadResult = {
+                orignalCadPosition: {
+                    topLeft: pos.orignalCadPosition.topLeft,
+                    topRight: pos.orignalCadPosition.topRight,
+                    bottomRight: pos.orignalCadPosition.bottomRight,
+                    bottomLeft: pos.orignalCadPosition.bottomLeft
+                },
+                realWorldPosition: {
+                    topLeft: realWorldTopLeft,
+                    topRight: realWorldTopRight,
+                    bottomRight: realWorldBottomRight,
+                    bottomLeft: realWorldBottomLeft
+                }
+            }
+            subjects.$getCadRealWorldLocation.next(realWorldLocation)
+
+        });
     }
 }

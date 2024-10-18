@@ -13,6 +13,7 @@ import {
 } from "../geo-helpers/feature-collection";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
 import type { Subject } from "rxjs";
+import { type CornerPositon, getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 
 mapboxgl.accessToken =
 	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
@@ -21,6 +22,8 @@ export class MapboxCad {
 	private map: Map | null = null;
 
 	private sourceId = "cad-source";
+
+	private transformedGeoJSON: FeatureCollection | null = null;
 
 	private originalCadScaleFactor: { latFactor: number; longFactor: number } = {
 		latFactor: 0,
@@ -87,6 +90,8 @@ export class MapboxCad {
 
 		const styleSpec = cadStyleFile ? await parseFileToJSON<StyleSpecification>(cadStyleFile) : null;
 
+		this.transformedGeoJSON = transformedFeatureCollection;
+
 		this.map.once("idle", () => {
 			this.addSource(transformedFeatureCollection);
 			this.addLayers(styleSpec ? styleSpec.layers : []);
@@ -129,10 +134,47 @@ export class MapboxCad {
 		});
 
 		subjects.$geoReferenceCad.subscribe(() => {
-			// Todo: add georeferences
+
+
+			const topLeft = this.getCornerForGeoReference("top-left");
+			const topRight = this.getCornerForGeoReference("top-right");
+			const bottomLeft = this.getCornerForGeoReference("bottom-left");
+			const bottomRight = this.getCornerForGeoReference("bottom-right");
+
+
+			subjects.$getMapBackgroundPostion.next({
+				canvasPositions: {
+					topLeft: topLeft.canvas,
+					topRight: topRight.canvas,
+					bottomLeft: bottomLeft.canvas,
+					bottomRight: bottomRight.canvas,
+				},
+				orignalCadPosition: {
+					topLeft: topLeft.cad,
+					topRight: topRight.cad,
+					bottomLeft: bottomLeft.cad,
+					bottomRight: bottomRight.cad,
+				}
+			})
 		});
 
 		this.$eventLock = subjects.$eventLock;
+	}
+
+	private getCornerForGeoReference(cornerPosition: CornerPositon) {
+		if (this.transformedGeoJSON == null) {
+			throw new Error("Cad GeoJSON is null");
+		}
+
+		const corner = getCornerCoordinate(this.transformedGeoJSON, cornerPosition);
+		const cornerScaled: [number, number] = [corner[0] / this.originalCadScaleFactor.longFactor, corner[1] / this.originalCadScaleFactor.latFactor]
+		const canvasCoords = this.map?.unproject(corner).toArray();
+
+		if (canvasCoords == null) {
+			throw new Error("Not all coordinates can be seen");
+		}
+
+		return { canvas: canvasCoords, cad: cornerScaled };
 	}
 
 	private enableMapMovement() {

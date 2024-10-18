@@ -1,7 +1,7 @@
 import type { FeatureCollection } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
 
-type CornerPositon = "top-left" | "top-right" | "bottom-right" | "bottom-left";
+export type CornerPositon = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 
 export function getCornerCoordinate(
 	featureCollection: FeatureCollection,
@@ -9,8 +9,10 @@ export function getCornerCoordinate(
 ): [number, number] {
 	let cornerCoordinate: [number, number] | null = null;
 
+	// biome-ignore lint/complexity/noForEach: <explanation>
 	featureCollection.features.forEach((feature) => {
 		const flatterenedCoordaintes = flattenFeatureCoordinates(feature);
+		// biome-ignore lint/complexity/noForEach: <explanation>
 		flatterenedCoordaintes.forEach((compCoord) => {
 			if (cornerCoordinate == null) {
 				cornerCoordinate = compCoord as [number, number];
