@@ -62,7 +62,7 @@ export class MapboxCad {
 			zoom: 1,
 			projection: "mercator",
 			maxPitch: 0,
-			style: { layers: [], sources: {}, version: 8 },
+			style: { layers: [], sources: {}, version: 8, glyphs: "mapbox://fonts/joshnice/{fontstack}/{range}.pbf", },
 			maxZoom: 24,
 		});
 
@@ -90,13 +90,34 @@ export class MapboxCad {
 
 		const styleSpec = cadStyleFile ? await parseFileToJSON<StyleSpecification>(cadStyleFile) : null;
 
+		if (cadStyleFile) {
+			// biome-ignore lint/complexity/noForEach: <explanation>
+			styleSpec?.layers.forEach((l) => {
+				if (l.type === "line") {
+					l.paint = { ...l.paint, "line-opacity": 0.7, "line-width": 5 };
+				}
+
+				if (l.type === "fill") {
+					l.paint = { ...l.paint, "fill-opacity": 0.7 };
+				}
+			})
+		}
+
 		this.transformedGeoJSON = transformedFeatureCollection;
 
-		this.map.once("idle", () => {
+		if (this.map.idle()) {
 			this.addSource(transformedFeatureCollection);
 			this.addLayers(styleSpec ? styleSpec.layers : []);
 			this.map?.fitBounds([one, two, three, four], { duration: 0 });
-		});
+		} else {
+			this.map.once("load", () => {
+				this.addSource(transformedFeatureCollection);
+				this.addLayers(styleSpec ? styleSpec.layers : []);
+				this.map?.fitBounds([one, two, three, four], { duration: 0 });
+			});
+		}
+
+
 	}
 
 	private addSource(geojson: FeatureCollection) {
