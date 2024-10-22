@@ -8,6 +8,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
 import { constructGeoReferenceString } from "./cad-placement-helpers";
 import { MapSearch } from "../map-search/map-search";
+import { MapboxGeoJsonViewer } from "../../mapbox/mapbox-geojson-viewer";
 
 interface CadPlacementProps {
 	options: CadUploadOptions;
@@ -30,6 +31,7 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 
 	const createdCadMap = useRef(false);
 	const createdBackgroundMap = useRef(false);
+	const createdGeoJSONViewerMap = useRef(false);
 
 	useEffect(() => {
 		const sub = $getGeoReferenceValue.current.subscribe((val) => {
@@ -108,6 +110,18 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 		}
 	}
 
+	const onGeojsonViewerElementRender = (containerElement: HTMLDivElement) => {
+		if (!createdGeoJSONViewerMap.current) {
+			createdGeoJSONViewerMap.current = true;
+
+			if (options.geojsonFile == null || options.styleFile == null) {
+				throw new Error();
+			}
+
+			new MapboxGeoJsonViewer(containerElement, options.geojsonFile, options.styleFile)
+		}
+	}
+
 	return (
 		<div>
 			<div className="controls">
@@ -135,6 +149,7 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 			<MapSearch $locationClicked={$searchLocationClicked.current} />
 			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
 			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
+						{/* <div className="map-element" style={{ zIndex: 3 }} ref={onGeojsonViewerElementRender} /> */}
 		</div>
 	);
 }

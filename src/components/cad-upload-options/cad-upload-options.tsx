@@ -1,6 +1,7 @@
 import { type ChangeEvent, useReducer } from "react";
 import { initialState, reducer } from "./cad-upload-state";
 import type { CadUploadOptions } from "../../types/cad-upload-types";
+import "./cad-upload-options.css";
 
 interface FileUploadProps {
 	onConfirmClicked: (options: CadUploadOptions) => void;
@@ -25,13 +26,15 @@ export function CadUploadComponent({ onConfirmClicked }: FileUploadProps) {
 
 	return (
 		<div className="geojson-options">
-			<div>
-				Cad geoJSON <input type="file" onChange={handleCadGeoJSONUpload} />
+			<div className="geojson-option">
+				<p>GeoJSON File</p>
+				<input type="file" onChange={handleCadGeoJSONUpload} />
 			</div>
-			<div>
-				Cad style <input type="file" onChange={handleCadGeoStyleUpload} />
+			<div className="geojson-option">
+				<p>Style File </p>
+				<input type="file" onChange={handleCadGeoStyleUpload} />
 			</div>
-			<button type="button" onClick={() => onConfirmClicked(state)}>Start</button>
+			<button type="button" onClick={() => onConfirmClicked(state)}>Confirm</button>
 		</div>
 	);
 }

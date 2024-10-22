@@ -1,5 +1,17 @@
 .geojson-options {
+    margin-top: 25%;
+    width: 100%;
     display: flex;
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
     gap: 20px;
+}
+
+.geojson-option {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
 }

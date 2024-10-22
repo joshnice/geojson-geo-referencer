@@ -41,7 +41,8 @@ export class MapboxCad {
 		type: "line",
 		paint: {
 			"line-color": "red",
-			"line-width": 5,
+			"line-width": 1,
+			"line-opacity": 0.7
 		},
 		source: this.sourceId,
 		filter: ["==", ["geometry-type"], "LineString"],
