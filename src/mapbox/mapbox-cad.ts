@@ -213,14 +213,14 @@ export class MapboxCad {
 			corner[0] / this.originalCadScaleFactor.longFactor,
 			corner[1] / this.originalCadScaleFactor.latFactor,
 		];
-		const canvasCoords = this.map?.unproject(corner).toArray();
+		const canvasCoords = this.map?.project(corner);
 
 		if (canvasCoords == null) {
 			throw new Error("Not all coordinates can be seen");
 		}
 
 		return {
-			canvas: canvasCoords,
+			canvas: [canvasCoords.x, canvasCoords.y] as [number, number],
 			cad: getClosestFeatureCollectionCoordinate(
 				this.originalGeoJSON,
 				cornerScaled,

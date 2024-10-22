@@ -56,11 +56,11 @@ export class MapboxBackground {
 				?.toArray();
 
 			const realWorldBottomLeft = this.map
-				.unproject(pos.canvasPositions.bottomRight)
+				.unproject(pos.canvasPositions.bottomLeft)
 				?.toArray();
 
 			const realWorldBottomRight = this.map
-				.unproject(pos.canvasPositions.bottomLeft)
+				.unproject(pos.canvasPositions.bottomRight)
 				?.toArray();
 
 			const realWorldLocation: GeoReferenceCadResult = {
