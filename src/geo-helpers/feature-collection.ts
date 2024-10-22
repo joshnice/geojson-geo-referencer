@@ -58,15 +58,32 @@ export async function transformNonValidGeoJSONToValid(
 	const { highestLong, highestLat, lowestLat, lowestLong } =
 		findHighestAndLowestCoordinatesInFeatureCollection(featureCollection);
 
+	const longDiff = highestLong - lowestLong;
+	const latDiff = highestLat - lowestLat;
+
+	let longScaleFactor = 0;
+	let latScaleFactor = 0;
+	// Longitude side is bigger
+	if (longDiff > latDiff) {
+		longScaleFactor = longDiff / latDiff;
+		latScaleFactor = 1;
+	} else {
+		latScaleFactor = latDiff / longDiff;
+		longScaleFactor = 1;
+	}
+
 	const unsignedLowestLong = lowestLong * -1;
+
 	const highestUnsignedLong =
 		highestLong > unsignedLowestLong ? highestLong : unsignedLowestLong;
+
 	const unsignedLowestLat = lowestLat * -1;
+
 	const highestUnsignedLat =
 		highestLat > unsignedLowestLat ? highestLat : unsignedLowestLat;
 
-	const longFactor = 2 / highestUnsignedLong;
-	const latFactor = 1 / highestUnsignedLat;
+	const longFactor = longScaleFactor / highestUnsignedLong;
+	const latFactor = latScaleFactor / highestUnsignedLat;
 
 	const features = featureCollection.features.map((feature) =>
 		modifyFeatureWithFactor(feature, longFactor, latFactor),

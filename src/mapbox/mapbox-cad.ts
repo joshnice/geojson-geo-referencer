@@ -119,7 +119,7 @@ export class MapboxCad {
 			// biome-ignore lint/complexity/noForEach: <explanation>
 			styleSpec?.layers.forEach((l) => {
 				if (l.type === "line") {
-					l.paint = { ...l.paint, "line-opacity": 0.7, "line-width": 5 };
+					l.paint = { ...l.paint, "line-opacity": 0.7, "line-width": 1 };
 				}
 
 				if (l.type === "fill") {
