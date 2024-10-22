@@ -9,11 +9,15 @@ import type { FeatureCollection } from "geojson";
 import type { Subjects } from "./types";
 import { bbox } from "@turf/bbox";
 import {
+	getClosestCadCoordinate as getClosestFeatureCollectionCoordinate,
 	transformNonValidGeoJSONToValid,
 } from "../geo-helpers/feature-collection";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
 import type { Subject } from "rxjs";
-import { type CornerPositon, getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
+import {
+	type CornerPosition,
+	getCornerCoordinate,
+} from "../geo-helpers/get-feature-collection-corners";
 
 mapboxgl.accessToken =
 	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
@@ -22,6 +26,8 @@ export class MapboxCad {
 	private map: Map | null = null;
 
 	private sourceId = "cad-source";
+
+	private originalGeoJSON: FeatureCollection | null = null;
 
 	private transformedGeoJSON: FeatureCollection | null = null;
 
@@ -43,14 +49,26 @@ export class MapboxCad {
 
 	private $eventLock: Subject<MouseEvent> | null = null;
 
-	constructor(element: HTMLDivElement, cadGeojson: File, cadStyle: File | null, subjects: Subjects) {
+	constructor(
+		element: HTMLDivElement,
+		cadGeojson: File,
+		cadStyle: File | null,
+		subjects: Subjects,
+	) {
 		this.createMap(element, cadGeojson, cadStyle);
 		this.setUpSubjects(subjects);
 	}
 
-	private async createMap(element: HTMLDivElement, geoJSONFile: File, cadStyleFile: File | null) {
+	private async createMap(
+		element: HTMLDivElement,
+		geoJSONFile: File,
+		cadStyleFile: File | null,
+	) {
+		this.originalGeoJSON =
+			await parseFileToJSON<FeatureCollection>(geoJSONFile);
+
 		const { featureCollection: transformedFeatureCollection, scaleFactor } =
-			await transformNonValidGeoJSONToValid(geoJSONFile);
+			await transformNonValidGeoJSONToValid(this.originalGeoJSON);
 
 		this.originalCadScaleFactor = scaleFactor;
 
@@ -62,7 +80,12 @@ export class MapboxCad {
 			zoom: 1,
 			projection: "mercator",
 			maxPitch: 0,
-			style: { layers: [], sources: {}, version: 8, glyphs: "mapbox://fonts/joshnice/{fontstack}/{range}.pbf", },
+			style: {
+				layers: [],
+				sources: {},
+				version: 8,
+				glyphs: "mapbox://fonts/joshnice/{fontstack}/{range}.pbf",
+			},
 			maxZoom: 24,
 		});
 
@@ -88,7 +111,9 @@ export class MapboxCad {
 
 		this.map.doubleClickZoom.disable();
 
-		const styleSpec = cadStyleFile ? await parseFileToJSON<StyleSpecification>(cadStyleFile) : null;
+		const styleSpec = cadStyleFile
+			? await parseFileToJSON<StyleSpecification>(cadStyleFile)
+			: null;
 
 		if (cadStyleFile) {
 			// biome-ignore lint/complexity/noForEach: <explanation>
@@ -100,7 +125,7 @@ export class MapboxCad {
 				if (l.type === "fill") {
 					l.paint = { ...l.paint, "fill-opacity": 0.7 };
 				}
-			})
+			});
 		}
 
 		this.transformedGeoJSON = transformedFeatureCollection;
@@ -116,8 +141,6 @@ export class MapboxCad {
 				this.map?.fitBounds([one, two, three, four], { duration: 0 });
 			});
 		}
-
-
 	}
 
 	private addSource(geojson: FeatureCollection) {
@@ -135,7 +158,7 @@ export class MapboxCad {
 				// biome-ignore lint/performance/noDelete: <explanation>
 				delete l["source-layer"];
 				this.map?.addLayer(l);
-			})
+			});
 		} else {
 			this.map?.addLayer(this.lineLayer);
 		}
@@ -155,13 +178,10 @@ export class MapboxCad {
 		});
 
 		subjects.$geoReferenceCad.subscribe(() => {
-
-
 			const topLeft = this.getCornerForGeoReference("top-left");
 			const topRight = this.getCornerForGeoReference("top-right");
 			const bottomLeft = this.getCornerForGeoReference("bottom-left");
 			const bottomRight = this.getCornerForGeoReference("bottom-right");
-
 
 			subjects.$getMapBackgroundPostion.next({
 				canvasPositions: {
@@ -170,32 +190,41 @@ export class MapboxCad {
 					bottomLeft: bottomLeft.canvas,
 					bottomRight: bottomRight.canvas,
 				},
-				orignalCadPosition: {
+				originalCadPosition: {
 					topLeft: topLeft.cad,
 					topRight: topRight.cad,
 					bottomLeft: bottomLeft.cad,
 					bottomRight: bottomRight.cad,
-				}
-			})
+				},
+			});
 		});
 
 		this.$eventLock = subjects.$eventLock;
 	}
 
-	private getCornerForGeoReference(cornerPosition: CornerPositon) {
-		if (this.transformedGeoJSON == null) {
+	private getCornerForGeoReference(cornerPosition: CornerPosition) {
+		if (this.transformedGeoJSON == null || this.originalGeoJSON == null) {
 			throw new Error("Cad GeoJSON is null");
 		}
 
 		const corner = getCornerCoordinate(this.transformedGeoJSON, cornerPosition);
-		const cornerScaled: [number, number] = [corner[0] / this.originalCadScaleFactor.longFactor, corner[1] / this.originalCadScaleFactor.latFactor]
+		const cornerScaled: [number, number] = [
+			corner[0] / this.originalCadScaleFactor.longFactor,
+			corner[1] / this.originalCadScaleFactor.latFactor,
+		];
 		const canvasCoords = this.map?.unproject(corner).toArray();
 
 		if (canvasCoords == null) {
 			throw new Error("Not all coordinates can be seen");
 		}
 
-		return { canvas: canvasCoords, cad: cornerScaled };
+		return {
+			canvas: canvasCoords,
+			cad: getClosestFeatureCollectionCoordinate(
+				this.originalGeoJSON,
+				cornerScaled,
+			),
+		};
 	}
 
 	private enableMapMovement() {

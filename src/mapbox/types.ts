@@ -12,17 +12,17 @@ export interface Subjects {
 
 export type GetMapBackgroundPosition = {
 	canvasPositions: Corners;
-	orignalCadPosition: Corners;
-}
+	originalCadPosition: Corners;
+};
 
 export type GeoReferenceCadResult = {
-	orignalCadPosition: Corners;
+	originalCadPosition: Corners;
 	realWorldPosition: Corners;
-}
+};
 
 export type Corners = {
-	topLeft: [number, number],
-	topRight: [number, number],
-	bottomRight: [number, number],
-	bottomLeft: [number, number],
-}
+	topLeft: [number, number];
+	topRight: [number, number];
+	bottomRight: [number, number];
+	bottomLeft: [number, number];
+};

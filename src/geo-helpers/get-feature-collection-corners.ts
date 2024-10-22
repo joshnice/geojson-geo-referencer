@@ -1,26 +1,30 @@
 import type { FeatureCollection } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
 
-export type CornerPositon = "top-left" | "top-right" | "bottom-right" | "bottom-left";
+export type CornerPosition =
+	| "top-left"
+	| "top-right"
+	| "bottom-right"
+	| "bottom-left";
 
 export function getCornerCoordinate(
 	featureCollection: FeatureCollection,
-	cornerPositon: CornerPositon,
+	cornerPosition: CornerPosition,
 ): [number, number] {
 	let cornerCoordinate: [number, number] | null = null;
 
 	// biome-ignore lint/complexity/noForEach: <explanation>
 	featureCollection.features.forEach((feature) => {
-		const flatterenedCoordaintes = flattenFeatureCoordinates(feature);
+		const flattenedCoordinates = flattenFeatureCoordinates(feature);
 		// biome-ignore lint/complexity/noForEach: <explanation>
-		flatterenedCoordaintes.forEach((compCoord) => {
+		flattenedCoordinates.forEach((compCoord) => {
 			if (cornerCoordinate == null) {
 				cornerCoordinate = compCoord as [number, number];
 			}
 
 			if (
 				compareCorner(
-					cornerPositon,
+					cornerPosition,
 					cornerCoordinate,
 					compCoord as [number, number],
 				)
@@ -38,20 +42,20 @@ export function getCornerCoordinate(
 }
 
 function compareCorner(
-	cornerPositon: CornerPositon,
+	cornerPosition: CornerPosition,
 	current: [number, number],
-	comparsion: [number, number],
+	comparison: [number, number],
 ) {
-	const [compLong, compLat] = comparsion;
+	const [compLong, compLat] = comparison;
 	const [currentLong, currentLat] = current;
-	switch (cornerPositon) {
+	switch (cornerPosition) {
 		case "top-left":
-			return compLong < currentLong && compLat > currentLat;
-		case "top-right":
-			return compLong > currentLong && compLat > currentLat;
-		case "bottom-left":
 			return compLong < currentLong && compLat < currentLat;
-		case "bottom-right":
+		case "top-right":
+			return compLong > currentLong && compLat < currentLat;
+		case "bottom-left":
 			return compLong < currentLong && compLat > currentLat;
+		case "bottom-right":
+			return compLong > currentLong && compLat > currentLat;
 	}
 }

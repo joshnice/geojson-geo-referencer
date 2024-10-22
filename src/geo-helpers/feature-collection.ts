@@ -22,9 +22,11 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(
 	let lowestLong = Number.POSITIVE_INFINITY;
 	let lowestLat = Number.POSITIVE_INFINITY;
 
+	// biome-ignore lint/complexity/noForEach: <explanation>
 	featureCollection.features.forEach((feature) => {
 		const flattenedCoordinates = flattenFeatureCoordinates(feature);
 
+		// biome-ignore lint/complexity/noForEach: <explanation>
 		flattenedCoordinates.forEach(([long, lat]) => {
 			if (long > highestLong) {
 				highestLong = long;
@@ -47,19 +49,21 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(
 	return { highestLong, highestLat, lowestLat, lowestLong };
 }
 
-export async function transformNonValidGeoJSONToValid(file: File): Promise<{
+export async function transformNonValidGeoJSONToValid(
+	featureCollection: FeatureCollection,
+): Promise<{
 	featureCollection: FeatureCollection;
 	scaleFactor: { latFactor: number; longFactor: number };
 }> {
-	const featureCollection = await parseFileToJSON<FeatureCollection>(file);
-
 	const { highestLong, highestLat, lowestLat, lowestLong } =
 		findHighestAndLowestCoordinatesInFeatureCollection(featureCollection);
 
 	const unsignedLowestLong = lowestLong * -1;
-	const highestUnsignedLong = highestLong > unsignedLowestLong ? highestLong : unsignedLowestLong;
+	const highestUnsignedLong =
+		highestLong > unsignedLowestLong ? highestLong : unsignedLowestLong;
 	const unsignedLowestLat = lowestLat * -1;
-	const highestUnsignedLat = highestLat > unsignedLowestLat ? highestLat : unsignedLowestLat;
+	const highestUnsignedLat =
+		highestLat > unsignedLowestLat ? highestLat : unsignedLowestLat;
 
 	const longFactor = 2 / highestUnsignedLong;
 	const latFactor = 1 / highestUnsignedLat;
@@ -73,7 +77,7 @@ export async function transformNonValidGeoJSONToValid(file: File): Promise<{
 	const {
 		highestLong: geoReferencedHighestLong,
 		highestLat: geoReferencedHighestLat,
-		lowestLat: geoReferenecedLowestLat,
+		lowestLat: geoReferencedLowestLat,
 		lowestLong: geoReferencedLowestLong,
 	} = findHighestAndLowestCoordinatesInFeatureCollection(
 		scaledFeatureCollection,
@@ -91,7 +95,7 @@ export async function transformNonValidGeoJSONToValid(file: File): Promise<{
 
 	const latCutOff = calculateAdjustedAverage(
 		geoRefAvgLat,
-		geoReferenecedLowestLat,
+		geoReferencedLowestLat,
 		geoReferencedHighestLat,
 	);
 
@@ -105,4 +109,33 @@ export async function transformNonValidGeoJSONToValid(file: File): Promise<{
 		),
 		scaleFactor: { longFactor, latFactor },
 	};
+}
+
+export function getClosestCadCoordinate(
+	featureCollection: FeatureCollection,
+	coordinate: [number, number],
+) {
+	let totalDiff = Number.POSITIVE_INFINITY;
+	let closestCoordinate: [number, number] | null = null;
+
+	// biome-ignore lint/complexity/noForEach: <explanation>
+	featureCollection.features.forEach((feature) => {
+		const flattenedCoordinates = flattenFeatureCoordinates(feature);
+
+		// biome-ignore lint/complexity/noForEach: <explanation>
+		flattenedCoordinates.forEach(([long, lat]) => {
+			const diff =
+				Math.abs(long - coordinate[0]) + Math.abs(lat - coordinate[1]);
+			if (diff < totalDiff) {
+				totalDiff = diff;
+				closestCoordinate = [long, lat];
+			}
+		});
+	});
+
+	if (closestCoordinate == null) {
+		throw new Error("No closest coordinate found");
+	}
+
+	return closestCoordinate;
 }
