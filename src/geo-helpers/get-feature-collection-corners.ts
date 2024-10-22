@@ -50,12 +50,12 @@ function compareCorner(
 	const [currentLong, currentLat] = current;
 	switch (cornerPosition) {
 		case "top-left":
-			return compLong < currentLong && compLat < currentLat;
-		case "top-right":
-			return compLong > currentLong && compLat < currentLat;
-		case "bottom-left":
 			return compLong < currentLong && compLat > currentLat;
-		case "bottom-right":
+		case "top-right":
 			return compLong > currentLong && compLat > currentLat;
+		case "bottom-left":
+			return compLong < currentLong && compLat < currentLat;
+		case "bottom-right":
+			return compLong > currentLong && compLat < currentLat;
 	}
 }
