@@ -8,6 +8,7 @@ export interface Subjects {
 	$moveCad: Subject<boolean>;
 	$getMapBackgroundPostion: Subject<GetMapBackgroundPosition>;
 	$getCadRealWorldLocation: Subject<GeoReferenceCadResult>;
+	$searchLocationClicked: Subject<[number, number, number, number]>
 }
 
 export type GetMapBackgroundPosition = {

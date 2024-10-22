@@ -1,6 +1,5 @@
 import type { FeatureCollection, Feature } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
-import { parseFileToJSON } from "../file-helpers/file-to-json";
 import { modifyFeatureWithFactor } from "./translate-feature";
 import {
 	calculateAdjustedAverage,

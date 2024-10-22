@@ -79,5 +79,10 @@ export class MapboxBackground {
 			};
 			subjects.$getCadRealWorldLocation.next(realWorldLocation);
 		});
+
+		subjects.$searchLocationClicked.subscribe((bounds) => {
+			console.log("bounds", bounds);
+			this.map.fitBounds(bounds, { duration: 2000, animate: true });
+		});
 	}
 }

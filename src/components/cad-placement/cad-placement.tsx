@@ -7,6 +7,7 @@ import type { GeoReferenceCadResult, GetMapBackgroundPosition } from "../../mapb
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
 import { constructGeoReferenceString } from "./cad-placement-helpers";
+import { MapSearch } from "../map-search/map-search";
 
 interface CadPlacementProps {
 	options: CadUploadOptions;
@@ -25,6 +26,7 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 	const $moveBackgroundPosition = useRef(new Subject<boolean>());
 	const $getMapBackgroundPostion = useRef(new Subject<GetMapBackgroundPosition>());
 	const $getGeoReferenceValue = useRef(new Subject<GeoReferenceCadResult>());
+	const $searchLocationClicked = useRef(new Subject<[number, number, number, number]>());
 
 	const createdCadMap = useRef(false);
 	const createdBackgroundMap = useRef(false);
@@ -83,7 +85,9 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				$moveBackground: $moveBackgroundPosition.current,
 				$moveCad: $moveCadPosition.current,
 				$getMapBackgroundPostion: $getMapBackgroundPostion.current,
-				$getCadRealWorldLocation: $getGeoReferenceValue.current
+				$getCadRealWorldLocation: $getGeoReferenceValue.current,
+				$searchLocationClicked: $searchLocationClicked.current
+
 			});
 		}
 	};
@@ -98,7 +102,8 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				$moveBackground: $moveBackgroundPosition.current,
 				$moveCad: $moveCadPosition.current,
 				$getMapBackgroundPostion: $getMapBackgroundPostion.current,
-				$getCadRealWorldLocation: $getGeoReferenceValue.current
+				$getCadRealWorldLocation: $getGeoReferenceValue.current,
+				$searchLocationClicked: $searchLocationClicked.current
 			});
 		}
 	}
@@ -127,9 +132,9 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 					</div>
 				}
 			</div>
+			<MapSearch $locationClicked={$searchLocationClicked.current} />
 			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
 			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
-
-		</div >
+		</div>
 	);
 }
