@@ -6,6 +6,7 @@ import type { CadUploadOptions } from "../../types/cad-upload-types";
 import type { GeoReferenceCadResult, GetMapBackgroundPosition } from "../../mapbox/types";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
+import { constructGeoReferenceString } from "./cad-placement-helpers";
 
 interface CadPlacementProps {
 	options: CadUploadOptions;
@@ -15,6 +16,7 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 	const [rotation, setRotation] = useState(0);
 	const [moveCad, setMoveCad] = useState(false);
 	const [moveBackground, setMoveBackground] = useState(false);
+	const [showMessage, setShowMessage] = useState("");
 
 	const $rotationRef = useRef(new Subject<number>());
 	const $geoReferenceCad = useRef(new Subject<void>());
@@ -22,14 +24,18 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 	const $moveCadPosition = useRef(new Subject<boolean>());
 	const $moveBackgroundPosition = useRef(new Subject<boolean>());
 	const $getMapBackgroundPostion = useRef(new Subject<GetMapBackgroundPosition>());
-	const $getGeoReferenceValue = useRef(new Subject<GeoReferenceCadResult>())
+	const $getGeoReferenceValue = useRef(new Subject<GeoReferenceCadResult>());
 
 	const createdCadMap = useRef(false);
 	const createdBackgroundMap = useRef(false);
 
 	useEffect(() => {
 		const sub = $getGeoReferenceValue.current.subscribe((val) => {
-			console.log(val);
+			setShowMessage("Copied to clipboard!");
+			navigator.clipboard.writeText(constructGeoReferenceString(val));
+			setTimeout(() => {
+				setShowMessage("");
+			}, 5000)
 		})
 		return () => {
 			sub.unsubscribe();
@@ -101,11 +107,11 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 		<div>
 			<div className="controls">
 				<div className="control-option">
-					Move Cad
+					<p className="control-label">Move Cad</p>
 					<input type="checkbox" checked={moveCad} onChange={() => handleMoveCad()} />
 				</div>
 				<div className="control-option">
-					Move Background
+					<p className="control-label">Move Background</p>
 					<input type="checkbox" checked={moveBackground} onChange={() => handleMoveBackground()} />
 				</div>
 				<div className="control-option">
@@ -115,10 +121,15 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 				<div>
 					<button type="button" onClick={handleGeoReferenceCad}>GeoReference Cad</button>
 				</div>
+				{showMessage &&
+					<div className="control-option">
+						{showMessage}
+					</div>
+				}
 			</div>
 			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
 			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
 
-		</div>
+		</div >
 	);
 }

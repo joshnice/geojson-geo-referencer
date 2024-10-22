@@ -12,3 +12,7 @@ export function flattenFeatureCoordinates(feature: Feature) {
 			throw new Error(`Not handled geometry type ${feature.geometry.type}`);
 	}
 }
+
+export function roundCoordinate(coordinate: [number, number], dp = 6): [number, number] {
+	return coordinate.map(num => Number.parseFloat(num.toFixed(dp))) as [number, number];
+}

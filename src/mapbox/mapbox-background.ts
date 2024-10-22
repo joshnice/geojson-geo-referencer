@@ -1,6 +1,7 @@
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 import mapboxgl, { Map } from "mapbox-gl";
 import type { GeoReferenceCadResult, Subjects } from "./types";
+import { roundCoordinate } from "../geo-helpers/coordinate-helpers";
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg';
 
@@ -60,10 +61,10 @@ export class MapboxBackground {
                     bottomLeft: pos.orignalCadPosition.bottomLeft
                 },
                 realWorldPosition: {
-                    topLeft: realWorldTopLeft,
-                    topRight: realWorldTopRight,
-                    bottomRight: realWorldBottomRight,
-                    bottomLeft: realWorldBottomLeft
+                    topLeft: roundCoordinate(realWorldTopLeft),
+                    topRight: roundCoordinate(realWorldTopRight),
+                    bottomRight: roundCoordinate(realWorldBottomRight),
+                    bottomLeft: roundCoordinate(realWorldBottomLeft)
                 }
             }
             subjects.$getCadRealWorldLocation.next(realWorldLocation)
