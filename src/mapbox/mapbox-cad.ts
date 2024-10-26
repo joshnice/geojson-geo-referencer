@@ -6,7 +6,6 @@ import mapboxgl, {
 	type StyleSpecification,
 } from "mapbox-gl";
 import type { FeatureCollection } from "geojson";
-import type { Subjects } from "./types";
 import { bbox } from "@turf/bbox";
 import {
 	getClosestCadCoordinate as getClosestFeatureCollectionCoordinate,
@@ -18,6 +17,7 @@ import {
 	type CornerPosition,
 	getCornerCoordinate,
 } from "../geo-helpers/get-feature-collection-corners";
+import type { SubjectContext } from "../state/subjects-context";
 
 mapboxgl.accessToken =
 	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
@@ -54,7 +54,7 @@ export class MapboxCad {
 		element: HTMLDivElement,
 		cadGeojson: File,
 		cadStyle: File | null,
-		subjects: Subjects,
+		subjects: SubjectContext,
 	) {
 		this.createMap(element, cadGeojson, cadStyle);
 		this.setUpSubjects(subjects);
@@ -165,12 +165,12 @@ export class MapboxCad {
 		}
 	}
 
-	private setUpSubjects(subjects: Subjects) {
+	private setUpSubjects(subjects: SubjectContext) {
 		subjects.$rotation.subscribe((rotation) => {
 			this.map?.setBearing(rotation);
 		});
 
-		subjects.$moveCad.subscribe((move) => {
+		subjects.$moveCadPosition.subscribe((move) => {
 			if (move) {
 				this.enableMapMovement();
 			} else {

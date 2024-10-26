@@ -2,6 +2,7 @@
 import mapboxgl, { Map } from "mapbox-gl";
 import type { GeoReferenceCadResult, Subjects } from "./types";
 import { roundCoordinate } from "../geo-helpers/coordinate-helpers";
+import type { SubjectContext } from "../state/subjects-context";
 
 mapboxgl.accessToken =
 	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
@@ -11,7 +12,7 @@ export class MapboxBackground {
 
 	private allowMove = false;
 
-	constructor(element: HTMLDivElement, subjects: Subjects) {
+	constructor(element: HTMLDivElement, subjects: SubjectContext) {
 		this.map = new Map({
 			container: element,
 			center: [0, 0],
@@ -26,7 +27,7 @@ export class MapboxBackground {
 		this.setUpSubjects(subjects);
 	}
 
-	private setUpSubjects(subjects: Subjects) {
+	private setUpSubjects(subjects: SubjectContext) {
 		subjects.$eventLock.subscribe((event) => {
 			let newEvent: WheelEvent | MouseEvent | null = null;
 			switch (event.type) {
@@ -42,7 +43,7 @@ export class MapboxBackground {
 			}
 		});
 
-		subjects.$moveBackground.subscribe((move) => {
+		subjects.$moveBackgroundPosition.subscribe((move) => {
 			this.allowMove = move;
 		});
 
@@ -77,7 +78,7 @@ export class MapboxBackground {
 					bottomLeft: roundCoordinate(realWorldBottomLeft),
 				},
 			};
-			subjects.$getCadRealWorldLocation.next(realWorldLocation);
+			subjects.$getGeoReferenceValue.next(realWorldLocation);
 		});
 
 		subjects.$searchLocationClicked.subscribe((bounds) => {
