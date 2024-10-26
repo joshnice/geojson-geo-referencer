@@ -134,10 +134,10 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 					<input type="checkbox" checked={moveBackground} onChange={() => handleMoveBackground()} />
 				</div>
 				<div className="control-option">
-					Rotation
+					<p className="control-label">Rotation </p>
 					<input className="number-input" type="number" value={rotation} onChange={(event) => handleRotationChange(event.target.value)} />
 				</div>
-				<div>
+				<div className="control-option geo-ref-button">
 					<button type="button" onClick={handleGeoReferenceCad}>GeoReference Cad</button>
 				</div>
 				{showMessage &&
@@ -149,7 +149,7 @@ export function CadPlacementComponent({ options }: CadPlacementProps) {
 			<MapSearch $locationClicked={$searchLocationClicked.current} />
 			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
 			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
-						{/* <div className="map-element" style={{ zIndex: 3 }} ref={onGeojsonViewerElementRender} /> */}
+			{/* <div className="map-element" style={{ zIndex: 3 }} ref={onGeojsonViewerElementRender} /> */}
 		</div>
 	);
 }

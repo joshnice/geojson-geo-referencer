@@ -8,7 +8,7 @@
 
 .controls {
 	z-index: 100;
-	height: 200px;
+	height: 250px;
 	width: 300px;
 	position: absolute;
 	top: 0px;
@@ -26,10 +26,18 @@
 }
 
 .control-label {
-	width: 170px;
+	width: 200px;
 }
 
 .control-option {
 	display: flex;
 	gap: 10px;
+	width: 100%;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.geo-ref-button {
+	justify-content: flex-end;
+	margin-top: 20px;
 }
