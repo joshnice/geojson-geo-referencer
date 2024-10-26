@@ -6,6 +6,7 @@ import { useSubjectContext } from "../../state/subjects-context";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
 import { MapOptions } from "../map-options/map-options";
+import { UploadComponent } from "../upload-options/upload-options";
 
 export function CadPlacementComponent() {
 
@@ -18,11 +19,7 @@ export function CadPlacementComponent() {
 	const onCadMapElementRender = (containerElement: HTMLDivElement) => {
 		if (!createdCadMap.current) {
 			createdCadMap.current = true;
-			// if (options.geojsonFile == null) {
-			// 	throw new Error();
-			// }
-
-			// new MapboxCad(containerElement, options.geojsonFile, options.styleFile, subjects);
+			new MapboxCad(containerElement, subjects);
 		}
 	};
 
@@ -37,6 +34,8 @@ export function CadPlacementComponent() {
 		<div>
 			<MapOptions />
 			<MapSearch />
+			<UploadComponent
+			/>
 			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
 			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
 		</div>

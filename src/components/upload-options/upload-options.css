@@ -1,0 +1,16 @@
+.upload-options {
+	position: absolute;
+	bottom: 30px;
+	background-color: white;
+	height: 300px;
+	width: 300px;
+	z-index: 10;
+}
+
+.geojson-option {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	justify-content: center;
+	align-items: center;
+}

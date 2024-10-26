@@ -52,28 +52,16 @@ export class MapboxCad {
 
 	constructor(
 		element: HTMLDivElement,
-		cadGeojson: File,
-		cadStyle: File | null,
 		subjects: SubjectContext,
 	) {
-		this.createMap(element, cadGeojson, cadStyle);
+		this.createMap(element);
 		this.setUpSubjects(subjects);
 	}
 
 	private async createMap(
 		element: HTMLDivElement,
-		geoJSONFile: File,
-		cadStyleFile: File | null,
 	) {
-		this.originalGeoJSON =
-			await parseFileToJSON<FeatureCollection>(geoJSONFile);
 
-		const { featureCollection: transformedFeatureCollection, scaleFactor } =
-			await transformNonValidGeoJSONToValid(this.originalGeoJSON);
-
-		this.originalCadScaleFactor = scaleFactor;
-
-		const [one, two, three, four] = bbox(transformedFeatureCollection);
 
 		this.map = new mapboxgl.Map({
 			container: element,
@@ -111,37 +99,6 @@ export class MapboxCad {
 		});
 
 		this.map.doubleClickZoom.disable();
-
-		const styleSpec = cadStyleFile
-			? await parseFileToJSON<StyleSpecification>(cadStyleFile)
-			: null;
-
-		if (cadStyleFile) {
-			// biome-ignore lint/complexity/noForEach: <explanation>
-			styleSpec?.layers.forEach((l) => {
-				if (l.type === "line") {
-					l.paint = { ...l.paint, "line-opacity": 0.7, "line-width": 1 };
-				}
-
-				if (l.type === "fill") {
-					l.paint = { ...l.paint, "fill-opacity": 0.7 };
-				}
-			});
-		}
-
-		this.transformedGeoJSON = transformedFeatureCollection;
-
-		if (this.map.idle()) {
-			this.addSource(transformedFeatureCollection);
-			this.addLayers(styleSpec ? styleSpec.layers : []);
-			this.map?.fitBounds([one, two, three, four], { duration: 0 });
-		} else {
-			this.map.once("load", () => {
-				this.addSource(transformedFeatureCollection);
-				this.addLayers(styleSpec ? styleSpec.layers : []);
-				this.map?.fitBounds([one, two, three, four], { duration: 0 });
-			});
-		}
 	}
 
 	private addSource(geojson: FeatureCollection) {
@@ -149,20 +106,6 @@ export class MapboxCad {
 			type: "geojson",
 			data: geojson,
 		});
-	}
-
-	private addLayers(layers: Layer[]) {
-		if (layers.length !== 0) {
-			// biome-ignore lint/complexity/noForEach: <explanation>
-			layers.forEach((l) => {
-				l.source = this.sourceId;
-				// biome-ignore lint/performance/noDelete: <explanation>
-				delete l["source-layer"];
-				this.map?.addLayer(l);
-			});
-		} else {
-			this.map?.addLayer(this.lineLayer);
-		}
 	}
 
 	private setUpSubjects(subjects: SubjectContext) {
@@ -201,6 +144,55 @@ export class MapboxCad {
 		});
 
 		this.$eventLock = subjects.$eventLock;
+
+		subjects.$cadGeoJSONUpload.subscribe(async (geoJSONFile) => {
+			this.originalGeoJSON =
+				await parseFileToJSON<FeatureCollection>(geoJSONFile);
+
+			const { featureCollection: transformedFeatureCollection, scaleFactor } =
+				await transformNonValidGeoJSONToValid(this.originalGeoJSON);
+
+			this.transformedGeoJSON = transformedFeatureCollection;
+			this.originalCadScaleFactor = scaleFactor;
+
+			const [one, two, three, four] = bbox(transformedFeatureCollection);
+
+			this.addSource(transformedFeatureCollection);
+			if (!this.map?.getStyle()?.layers.find((l) => l.source === this.sourceId)) {
+				this.map?.addLayer(this.lineLayer);
+			}
+			this.map?.fitBounds([one, two, three, four], { duration: 0 });
+		});
+
+		subjects.$cadStyleUpload.subscribe(async (styleFile) => {
+			const styleSpec = await parseFileToJSON<StyleSpecification>(styleFile)
+
+			// biome-ignore lint/complexity/noForEach: <explanation>
+			styleSpec?.layers.forEach((l) => {
+				l.source = this.sourceId;
+				// biome-ignore lint/performance/noDelete: <explanation>
+				delete l["source-layer"];
+				if (l.type === "line") {
+					l.paint = { ...l.paint, "line-opacity": 0.7, "line-width": 1 };
+				}
+
+				if (l.type === "fill") {
+					l.paint = { ...l.paint, "fill-opacity": 0.7 };
+				}
+			});
+
+			// biome-ignore lint/complexity/noForEach: <explanation>
+			this.map?.getStyle()?.layers.forEach((layer) => {
+				if (layer.source === this.sourceId) {
+					this.map?.removeLayer(layer.id);
+				}
+			});
+
+			// biome-ignore lint/complexity/noForEach: <explanation>
+			styleSpec.layers.forEach((layer) => {
+				this.map?.addLayer(layer);
+			});
+		});
 	}
 
 	private getCornerForGeoReference(cornerPosition: CornerPosition) {

@@ -11,6 +11,9 @@ export interface SubjectContext {
     $getMapBackgroundPostion: Subject<GetMapBackgroundPosition>;
     $getGeoReferenceValue: Subject<GeoReferenceCadResult>;
     $searchLocationClicked: Subject<[number, number, number, number]>;
+    // Upload cad subjects
+    $cadGeoJSONUpload: Subject<File>;
+    $cadStyleUpload: Subject<File>;
 }
 
 export const initialSubjectContext: SubjectContext = {
@@ -22,6 +25,8 @@ export const initialSubjectContext: SubjectContext = {
     $getMapBackgroundPostion: new Subject<GetMapBackgroundPosition>(),
     $getGeoReferenceValue: new Subject<GeoReferenceCadResult>(),
     $searchLocationClicked: new Subject<[number, number, number, number]>(),
+    $cadGeoJSONUpload: new Subject<File>(),
+    $cadStyleUpload: new Subject<File>(),
 }
 
 export const SubjectsContext = createContext<SubjectContext>(initialSubjectContext);
