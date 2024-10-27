@@ -6,7 +6,7 @@
 	width: 400px;
 
 	input {
-		width: 100%;
+		width: 380px;
 		box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 		border: 0px;
 		outline: none;
@@ -14,13 +14,37 @@
 		border-radius: 4px;
 	}
 
-	.map-search-result {
-		background-color: white;
-		z-index: 10;
-		width: 100%;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		text-align: left;
+	button {
+		border-radius: 0px;
+		height: 50px;
 	}
+}
+
+.map-search-result {
+	background-color: white;
+	z-index: 10;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: left;
+	border: none;
+	width: 390px;
+	border-bottom: 1px solid #cccccc;
+}
+
+.map-search-result:hover {
+	background-color: #ebe4e4;
+}
+
+.map-search-result:last-child {
+	border: 0px;
+	border-radius: 0px 0px 4px 4px;
+}
+
+.map-search-result:first-child {
+	border-radius: 4px 4px 0px 0px;
+}
+
+.search-results-list {
+	margin-top: 10px;
 }

@@ -48,26 +48,28 @@ export function MapSearch() {
 				onChange={handleMapSearchChange}
 				placeholder="Search for location"
 			/>
-			{state.results.map((result) => (
-				<button
-					type="button"
-					className="map-search-result"
-					key={result.id}
-					onClick={() =>
-						handleResultClicked(
-							result.properties.bbox,
-							result.properties.full_address,
-						)
-					}
-				>
-					{result.properties.full_address}
-				</button>
-			))}
-			{state.touched && state.results.length === 0 && (
-				<button type="button" className="map-search-result">
-					No results
-				</button>
-			)}
+			<div className="search-results-list">
+				{state.results.map((result) => (
+					<button
+						type="button"
+						className="map-search-result"
+						key={result.id}
+						onClick={() =>
+							handleResultClicked(
+								result.properties.bbox,
+								result.properties.full_address,
+							)
+						}
+					>
+						{result.properties.full_address}
+					</button>
+				))}
+				{state.touched && state.results.length === 0 && (
+					<button type="button" className="map-search-result">
+						No results
+					</button>
+				)}
+			</div>
 		</div>
 	);
 }
