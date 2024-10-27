@@ -18,6 +18,7 @@
 	justify-content: space-between;
 	align-items: center;
 	gap: 10px;
+	height: 40px;
 }
 
 .upload-option-sub-heading {
