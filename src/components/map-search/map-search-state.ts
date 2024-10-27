@@ -1,6 +1,6 @@
 import type { MapboxSearchResults } from "./map-search-types";
 
-type UpdateSearchString = { type: "update-search-string", payload: {searchString: string, request: ReturnType<typeof setTimeout>} };
+type UpdateSearchString = { type: "update-search-string", payload: { searchString: string, request: ReturnType<typeof setTimeout> } };
 type UpdateResults = { type: "update-results", payload: MapboxSearchResults["features"] };
 type ResultClicked = { type: "result-clicked", payload: string };
 
@@ -23,13 +23,13 @@ export const initialMapSearchReducerState: MapSearchReducerState = {
 
 export function mapSearchReducer(state: MapSearchReducerState, action: MapSearchReducerPayload): MapSearchReducerState {
     switch (action.type) {
-        case "update-results": 
+        case "update-results":
             return {
                 ...state,
                 results: action.payload,
                 touched: state.searchString.length > 0,
             }
-        case "update-search-string": 
+        case "update-search-string":
             if (state.apiCall != null) {
                 clearTimeout(state.apiCall);
             }
@@ -40,7 +40,6 @@ export function mapSearchReducer(state: MapSearchReducerState, action: MapSearch
                 touched: false,
             }
         case "result-clicked":
-            console.log("action", action.payload); 
             return {
                 ...state,
                 touched: false,

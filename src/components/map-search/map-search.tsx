@@ -36,7 +36,6 @@ export function MapSearch() {
 		name: string,
 	) => {
 		$searchLocationClicked.next(locationBbox);
-		console.log("name", name);
 		dispatch({ type: "result-clicked", payload: name });
 	};
 

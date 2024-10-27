@@ -3,7 +3,12 @@ import { FileUploadComponent } from "../file-upload";
 import "./upload-options.css";
 
 export function UploadComponent() {
-	const { $cadGeoJSONUpload, $cadStyleUpload } = useSubjectContext();
+	const {
+		$cadGeoJSONUpload,
+		$cadStyleUpload,
+		$geoReferencedGeoJSONUpload,
+		$geoReferencedStyleUpload,
+	} = useSubjectContext();
 
 	const handleCadGeoJSONUpload = (file: File) => {
 		$cadGeoJSONUpload.next(file);
@@ -11,6 +16,14 @@ export function UploadComponent() {
 
 	const handleCadGeoStyleUpload = (file: File) => {
 		$cadStyleUpload.next(file);
+	};
+
+	const handleGeoReferencedGeoJSONUpload = (file: File) => {
+		$geoReferencedGeoJSONUpload.next(file);
+	};
+
+	const handleGeoReferencedGeoStyleUpload = (file: File) => {
+		$geoReferencedStyleUpload.next(file);
 	};
 
 	return (
@@ -27,11 +40,11 @@ export function UploadComponent() {
 			<h4>Georeferencd</h4>
 			<div className="upload-option">
 				<p>GeoJSON File</p>
-				<FileUploadComponent onFileUpload={handleCadGeoStyleUpload} />
+				<FileUploadComponent onFileUpload={handleGeoReferencedGeoJSONUpload} />
 			</div>
 			<div className="upload-option">
 				<p>Style File </p>
-				<FileUploadComponent onFileUpload={handleCadGeoStyleUpload} />
+				<FileUploadComponent onFileUpload={handleGeoReferencedGeoStyleUpload} />
 			</div>
 		</div>
 	);
