@@ -17,4 +17,9 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	gap: 10px;
+}
+
+.upload-option-sub-heading {
+	flex-shrink: 0;
 }

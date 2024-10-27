@@ -30,20 +30,20 @@ export function UploadComponent() {
 		<div className="upload-options">
 			<h4>Non-GeoReferenced</h4>
 			<div className="upload-option">
-				<p>GeoJSON File</p>
+				<p className="upload-option-sub-heading">GeoJSON</p>
 				<FileUploadComponent onFileUpload={handleCadGeoJSONUpload} />
 			</div>
 			<div className="upload-option">
-				<p>Style File </p>
+				<p className="upload-option-sub-heading">Style</p>
 				<FileUploadComponent onFileUpload={handleCadGeoStyleUpload} />
 			</div>
 			<h4>Georeferencd</h4>
 			<div className="upload-option">
-				<p>GeoJSON File</p>
+				<p className="upload-option-sub-heading">GeoJSON</p>
 				<FileUploadComponent onFileUpload={handleGeoReferencedGeoJSONUpload} />
 			</div>
 			<div className="upload-option">
-				<p>Style File </p>
+				<p className="upload-option-sub-heading">Style</p>
 				<FileUploadComponent onFileUpload={handleGeoReferencedGeoStyleUpload} />
 			</div>
 		</div>

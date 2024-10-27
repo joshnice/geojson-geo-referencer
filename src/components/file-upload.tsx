@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import "./file-upload.css";
 
 interface FileUploadProps {
@@ -7,11 +7,13 @@ interface FileUploadProps {
 
 export function FileUploadComponent({ onFileUpload }: FileUploadProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
+	const [fileName, setFileName] = useState<string | null>(null);
 
 	const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.item(0);
 		if (file) {
 			onFileUpload(file);
+			setFileName(file.name);
 		}
 	};
 
@@ -23,15 +25,21 @@ export function FileUploadComponent({ onFileUpload }: FileUploadProps) {
 
 	return (
 		<>
-			<button type="button" onClick={handleButtonClick}>
-				Add file
-			</button>
-			<input
-				className="file-input"
-				ref={inputRef}
-				type="file"
-				onChange={handleFileUpload}
-			/>
+			{fileName == null ? (
+				<>
+					<button type="button" onClick={handleButtonClick}>
+						Add file
+					</button>
+					<input
+						className="file-input"
+						ref={inputRef}
+						type="file"
+						onChange={handleFileUpload}
+					/>
+				</>
+			) : (
+				<p className="file-name">{fileName}</p>
+			)}
 		</>
 	);
 }
