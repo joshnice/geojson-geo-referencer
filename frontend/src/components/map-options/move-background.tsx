@@ -17,6 +17,7 @@ export function MoveBackground() {
 			<p className="control-label">Move Background</p>
 			<input
 				type="checkbox"
+				className="checkbox"
 				checked={moveBackground}
 				onChange={() => handleMoveBackground()}
 			/>
