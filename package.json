@@ -3,11 +3,13 @@
 	"version": "0.0.1",
 	"type": "module",
 	"workspaces": [
-		"./frontend"
+		"./frontend",
+		"./infra"
 	],
 	"scripts": {
 		"dev": "npm run dev -w frontend",
-		"build": "npm run build -w frontend"
+		"build": "npm run build -w frontend",
+		"deploy": "npm run deploy -w infra"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.3"
