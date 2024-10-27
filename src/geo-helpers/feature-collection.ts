@@ -62,7 +62,6 @@ export async function transformNonValidGeoJSONToValid(
 
 	let longScaleFactor = 0;
 	let latScaleFactor = 0;
-	// Longitude side is bigger
 	if (longDiff > latDiff) {
 		longScaleFactor = longDiff / latDiff;
 		latScaleFactor = 1;
@@ -121,7 +120,6 @@ export async function transformNonValidGeoJSONToValid(
 			scaledFeatureCollection,
 			longCutOff,
 			latCutOff,
-			["Point"],
 		),
 		scaleFactor: { longFactor, latFactor },
 	};

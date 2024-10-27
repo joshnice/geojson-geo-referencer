@@ -6,16 +6,14 @@ export function filterCoordinatesViaMaxLongLat(
 	featureCollection: FeatureCollection,
 	maxLong: number,
 	maxLat: number,
-	filterGeomType: Feature["geometry"]["type"][],
 ) {
 	const validFeatures: Feature[] = [];
 	// biome-ignore lint/complexity/noForEach: <explanation>
 	featureCollection.features.forEach((feature) => {
-		const validFilterType = !filterGeomType.includes(feature.geometry.type);
 		const validCoords = !flattenFeatureCoordinates(feature).some(
 			([long, lat]) => long > maxLong || lat > maxLat,
 		);
-		if (validFilterType && validCoords) {
+		if (validCoords) {
 			validFeatures.push(feature);
 		}
 		return validFeatures;

@@ -13,7 +13,7 @@ mapboxgl.accessToken =
 export class MapboxBackground {
 	private readonly map: Map;
 
-	private allowMove = false;
+	private allowMove = true;
 
 	private readonly sourceId = "geojson";
 

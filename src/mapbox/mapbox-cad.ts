@@ -1,5 +1,6 @@
 import mapboxgl, {
-	type Layer,
+	type SymbolLayerSpecification,
+	type FillLayerSpecification,
 	type LineLayerSpecification,
 	// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 	type Map,
@@ -36,6 +37,17 @@ export class MapboxCad {
 		longFactor: 0,
 	};
 
+	private fillLayer: FillLayerSpecification = {
+		id: "fill-layer",
+		type: "fill",
+		paint: {
+			"fill-opacity": 0.7,
+			"fill-color": "green"
+		},
+		source: this.sourceId,
+		filter: ["==", ["geometry-type"], "Polygon"],
+	}
+
 	private lineLayer: LineLayerSpecification = {
 		id: "line-layer",
 		type: "line",
@@ -47,6 +59,16 @@ export class MapboxCad {
 		source: this.sourceId,
 		filter: ["==", ["geometry-type"], "LineString"],
 	};
+
+	private textLayer: SymbolLayerSpecification = {
+		id: "text-layer",
+		type: "symbol",
+		layout: {
+			"text-field": ["get", "text"]
+		},
+		source: this.sourceId,
+		filter: ["==", ["geometry-type"], "Point"],
+	}
 
 	private $eventLock: Subject<MouseEvent> | null = null;
 
@@ -160,6 +182,8 @@ export class MapboxCad {
 			this.addSource(transformedFeatureCollection);
 			if (!this.map?.getStyle()?.layers.find((l) => l.source === this.sourceId)) {
 				this.map?.addLayer(this.lineLayer);
+				this.map?.addLayer(this.fillLayer);
+				this.map?.addLayer(this.textLayer);
 			}
 			this.map?.fitBounds([one, two, three, four], { duration: 0 });
 		});
