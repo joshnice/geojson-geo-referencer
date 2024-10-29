@@ -41,6 +41,7 @@ export class MapboxBackground {
 			// style: "mapbox://styles/mapbox/standard",
 			style: "mapbox://styles/mapbox/light-v11",
 			maxPitch: 0,
+			maxZoom: 24
 		});
 
 		this.map.doubleClickZoom.disable();
