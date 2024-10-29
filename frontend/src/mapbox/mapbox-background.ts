@@ -17,6 +17,8 @@ export class MapboxBackground {
 
 	private readonly sourceId = "geojson";
 
+	private fitToBounds = true;
+
 	private readonly lineLayer: LineLayerSpecification = {
 		id: "line-layer",
 		type: "line",
@@ -111,9 +113,10 @@ export class MapboxBackground {
 				this.map.addLayer(this.lineLayer);
 			}
 
-			const [one, two, three, four] = bbox(geojson);
-			this.map?.fitBounds([one, two, three, four], { duration: 0 });
-
+			if (this.fitToBounds) {
+				const [one, two, three, four] = bbox(geojson);
+				this.map?.fitBounds([one, two, three, four], { duration: 0 });
+			}
 		});
 
 		subjects.$geoReferencedStyleUpload.subscribe(async (styleFile) => {
@@ -144,6 +147,10 @@ export class MapboxBackground {
 			styleSpec.layers.forEach((layer) => {
 				this.map?.addLayer(layer);
 			});
+		});
+
+		subjects.$cadGeoJSONUpload.subscribe(async () => {
+			this.fitToBounds = false;
 		});
 	}
 }
