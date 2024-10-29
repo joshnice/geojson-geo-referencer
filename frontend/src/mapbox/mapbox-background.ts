@@ -36,7 +36,8 @@ export class MapboxBackground {
 			zoom: 2,
 			projection: "mercator",
 			// style: "mapbox://styles/mapbox/dark-v11",
-			style: "mapbox://styles/mapbox/standard",
+			// style: "mapbox://styles/mapbox/standard",
+			style: "mapbox://styles/mapbox/light-v11",
 			maxPitch: 0,
 		});
 
