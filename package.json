@@ -4,12 +4,13 @@
 	"type": "module",
 	"workspaces": [
 		"./frontend",
-		"./infra"
+		"./infra",
+		"./api"
 	],
 	"scripts": {
 		"dev": "npm run dev -w frontend",
 		"build": "npm run build -w frontend",
-		"deploy": "npm run deploy -w infra"
+		"deploy": "npm run build -w api && npm run deploy -w infra"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.3"

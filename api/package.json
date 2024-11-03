@@ -1,0 +1,13 @@
+{
+	"name": "api",
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"build": "tsc -b"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/aws-lambda": "^8.10.145",
+		"typescript": "^5.5.3"
+	}
+}
