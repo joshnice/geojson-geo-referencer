@@ -41,4 +41,4 @@ jobs:
               run: aws s3 sync ./frontend/dist/ s3://geo-reference-tool-frontend-build-bucket --delete
 
             - name: Invalidate Cloudfront
-              run: aws cloudfront create-invalidation --distribution-id E1V2Z057YTE16A --paths '/*'
+              run: aws cloudfront create-invalidation --distribution-id E3VW7V6MQZY1KI --paths '/*'
