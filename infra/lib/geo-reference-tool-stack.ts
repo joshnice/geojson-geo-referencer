@@ -6,7 +6,10 @@ import { BucketAccessControl } from 'aws-cdk-lib/aws-s3';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Function as LambdaFunction, Runtime, Code } from "aws-cdk-lib/aws-lambda";
 import type { Construct } from 'constructs';
+import { config } from "dotenv";
 import * as path from "node:path";
+
+config();
 
 const name = "geo-reference-tool";
 
@@ -36,9 +39,9 @@ export class GeoReferenceToolStack extends cdk.Stack {
       },
     });
 
-    const {GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_BUCKET_NAME, GOOGLE_MAPS_SESSION_FILE_NAME} = process.env;
+    const { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_SESSION_FILE_NAME } = process.env;
 
-    if (GOOGLE_MAPS_API_KEY == null || GOOGLE_MAPS_BUCKET_NAME == null || GOOGLE_MAPS_SESSION_FILE_NAME == null) {
+    if (GOOGLE_MAPS_API_KEY == null || GOOGLE_MAPS_SESSION_FILE_NAME == null) {
       throw new Error("Missing environment variables");
     }
 
