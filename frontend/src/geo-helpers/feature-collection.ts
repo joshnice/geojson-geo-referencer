@@ -1,11 +1,7 @@
 import type { FeatureCollection, Feature } from "geojson";
-import { flattenFeatureCoordinates } from "./coordinate-helpers";
-import { modifyFeatureWithFactor } from "./translate-feature";
-import {
-	calculateAdjustedAverage,
-	filterCoordinatesViaMaxLongLat,
-} from "./filter-feature-collection";
-import { getAvgLongLat } from "./feature-collection-stats";
+import { destination } from "@turf/destination";
+import { calculateBearingBetweenCoordinates, calculateDistanceBetweenCoordinates, flattenFeatureCoordinates } from "./coordinate-helpers";
+import { changeCenterPointOfFeatureCollection } from "./feature-collection-position";
 
 export function createFeatureCollection(
 	features: Feature[],
@@ -48,80 +44,45 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(
 	return { highestLong, highestLat, lowestLat, lowestLong };
 }
 
+const ORIGIN: [number, number] = [0, 0];
+
 export async function transformNonValidGeoJSONToValid(
 	featureCollection: FeatureCollection,
+	units: "meters",
 ): Promise<{
 	featureCollection: FeatureCollection;
 	scaleFactor: { latFactor: number; longFactor: number };
 }> {
-	const { highestLong, highestLat, lowestLat, lowestLong } =
-		findHighestAndLowestCoordinatesInFeatureCollection(featureCollection);
 
-	const longDiff = highestLong - lowestLong;
-	const latDiff = highestLat - lowestLat;
+	const centeredFeatureCollection = changeCenterPointOfFeatureCollection(featureCollection);
 
-	let longScaleFactor = 0;
-	let latScaleFactor = 0;
-	if (longDiff > latDiff) {
-		longScaleFactor = longDiff / latDiff;
-		latScaleFactor = 1;
-	} else {
-		latScaleFactor = latDiff / longDiff;
-		longScaleFactor = 1;
-	}
+	const geoRefFeatures: Feature[] = [];
+	// biome-ignore lint/complexity/noForEach: <explanation>
+	centeredFeatureCollection.features.forEach((feature) => {
+		switch (feature.geometry.type) {
+			case "LineString": {
+				const coords: [number, number][] = [];
+				// biome-ignore lint/complexity/noForEach: <explanation>
+				feature.geometry.coordinates.forEach((coord) => {
+					const distanceFromOrigin = calculateDistanceBetweenCoordinates(ORIGIN, coord as [number, number]);
+					const bearingFromOrigin = calculateBearingBetweenCoordinates(ORIGIN, coord as [number, number])
+					const newCoord = destination(ORIGIN, distanceFromOrigin, bearingFromOrigin + 90, { units });
+					coords.push([newCoord.geometry.coordinates[0], newCoord.geometry.coordinates[1]]);
+				});
+				const updatedFeature: Feature = { type: "Feature", geometry: { coordinates: coords, type: "LineString" }, properties: {} };
+				geoRefFeatures.push(updatedFeature);
+				break;
+			}
+			default:
+				// Do nothing
+				break;
+		}
+	});
 
-	const unsignedLowestLong = lowestLong * -1;
-
-	const highestUnsignedLong =
-		highestLong > unsignedLowestLong ? highestLong : unsignedLowestLong;
-
-	const unsignedLowestLat = lowestLat * -1;
-
-	const highestUnsignedLat =
-		highestLat > unsignedLowestLat ? highestLat : unsignedLowestLat;
-
-	const longFactor = longScaleFactor / highestUnsignedLong;
-	const latFactor = latScaleFactor / highestUnsignedLat;
-
-	const features = featureCollection.features.map((feature) =>
-		modifyFeatureWithFactor(feature, longFactor, latFactor),
-	);
-
-	const scaledFeatureCollection = createFeatureCollection(features);
-
-	const {
-		highestLong: geoReferencedHighestLong,
-		highestLat: geoReferencedHighestLat,
-		lowestLat: geoReferencedLowestLat,
-		lowestLong: geoReferencedLowestLong,
-	} = findHighestAndLowestCoordinatesInFeatureCollection(
-		scaledFeatureCollection,
-	);
-
-	const { lat: geoRefAvgLat, long: geoRefAvgLong } = getAvgLongLat(
-		scaledFeatureCollection,
-	);
-
-	const longCutOff = calculateAdjustedAverage(
-		geoRefAvgLong,
-		geoReferencedLowestLong,
-		geoReferencedHighestLong,
-	);
-
-	const latCutOff = calculateAdjustedAverage(
-		geoRefAvgLat,
-		geoReferencedLowestLat,
-		geoReferencedHighestLat,
-	);
 
 	return {
-		// Ideally we would not use this
-		featureCollection: filterCoordinatesViaMaxLongLat(
-			scaledFeatureCollection,
-			longCutOff,
-			latCutOff,
-		),
-		scaleFactor: { longFactor, latFactor },
+		featureCollection: createFeatureCollection(geoRefFeatures),
+		scaleFactor: { longFactor: 1, latFactor: 1 },
 	};
 }
 

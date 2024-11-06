@@ -172,7 +172,7 @@ export class MapboxCad {
 				await parseFileToJSON<FeatureCollection>(geoJSONFile);
 
 			const { featureCollection: transformedFeatureCollection, scaleFactor } =
-				await transformNonValidGeoJSONToValid(this.originalGeoJSON);
+				await transformNonValidGeoJSONToValid(this.originalGeoJSON, "meters");
 
 			this.transformedGeoJSON = transformedFeatureCollection;
 			this.originalCadScaleFactor = scaleFactor;
