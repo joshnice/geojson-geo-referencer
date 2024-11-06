@@ -36,11 +36,22 @@ export class GeoReferenceToolStack extends cdk.Stack {
       },
     });
 
+    const {GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_BUCKET_NAME, GOOGLE_MAPS_SESSION_FILE_NAME} = process.env;
+
+    if (GOOGLE_MAPS_API_KEY == null || GOOGLE_MAPS_BUCKET_NAME == null || GOOGLE_MAPS_SESSION_FILE_NAME == null) {
+      throw new Error("Missing environment variables");
+    }
+
     const apiLambdaFunction = new LambdaFunction(this, `${name}-lambda-fn`, {
       functionName: `${name}-lambda-fn`,
       runtime: Runtime.NODEJS_LATEST,
       handler: 'index.handler',
       code: Code.fromAsset(path.join(__dirname, '../../api/dist')),
+      environment: {
+        GOOGLE_MAPS_API_KEY,
+        GOOGLE_MAPS_BUCKET_NAME: `${name}-google-maps-api-bucket`,
+        GOOGLE_MAPS_SESSION_FILE_NAME,
+      }
     });
 
     const api = new LambdaRestApi(this, `${name}-api-gateway`, {
