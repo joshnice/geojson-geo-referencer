@@ -17,7 +17,7 @@ export class MapboxBackground {
 
 	private readonly sourceId = "geojson";
 
-	private fitToBounds = true;
+	private cadAdded = false;
 
 	private readonly lineLayer: LineLayerSpecification = {
 		id: "line-layer",
@@ -53,12 +53,14 @@ export class MapboxBackground {
 			let newEvent: WheelEvent | MouseEvent | null = null;
 			switch (event.type) {
 				case "wheel":
-					newEvent = new WheelEvent(event.type, event);
+					if (!this.cadAdded) {
+						newEvent = new WheelEvent(event.type, event);
+					}
 					break;
 				default:
 					newEvent = new MouseEvent(event.type, event);
 			}
-			if (this.allowMove) {
+			if (this.allowMove && newEvent != null) {
 				const canvasElement = this.map.getCanvas();
 				canvasElement.dispatchEvent(newEvent);
 			}
@@ -114,7 +116,7 @@ export class MapboxBackground {
 				this.map.addLayer(this.lineLayer);
 			}
 
-			if (this.fitToBounds) {
+			if (!this.cadAdded) {
 				const [one, two, three, four] = bbox(geojson);
 				this.map?.fitBounds([one, two, three, four], { duration: 0 });
 			}
@@ -150,8 +152,12 @@ export class MapboxBackground {
 			});
 		});
 
+		subjects.$cadUploadFinished.subscribe((zoom) => {
+			this.map.setZoom(zoom);
+		})
+
 		subjects.$cadGeoJSONUpload.subscribe(async () => {
-			this.fitToBounds = false;
+			this.cadAdded = true;
 		});
 	}
 }

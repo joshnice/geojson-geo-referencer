@@ -14,6 +14,7 @@ export interface SubjectContext {
     // Upload cad subjects
     $cadGeoJSONUpload: Subject<File>;
     $cadStyleUpload: Subject<File>;
+    $cadUploadFinished: Subject<number>;
     // Upload standard geojson subjects
     $geoReferencedGeoJSONUpload: Subject<File>;
     $geoReferencedStyleUpload: Subject<File>;
@@ -30,6 +31,7 @@ export const initialSubjectContext: SubjectContext = {
     $searchLocationClicked: new Subject<[number, number, number, number]>(),
     $cadGeoJSONUpload: new Subject<File>(),
     $cadStyleUpload: new Subject<File>(),
+    $cadUploadFinished: new Subject<number>,
     $geoReferencedGeoJSONUpload: new Subject<File>(),
     $geoReferencedStyleUpload: new Subject<File>(),
 }

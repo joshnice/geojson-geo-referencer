@@ -186,6 +186,11 @@ export class MapboxCad {
 				this.map?.addLayer(this.textLayer);
 			}
 			this.map?.fitBounds([one, two, three, four], { duration: 0 });
+			const zoom = this.map?.getZoom();
+			if (zoom == null) {
+				throw new Error();
+			}
+			subjects.$cadUploadFinished.next(zoom);
 		});
 
 		subjects.$cadStyleUpload.subscribe(async (styleFile) => {
@@ -246,12 +251,8 @@ export class MapboxCad {
 
 	private enableMapMovement() {
 		this.map?.dragPan.enable();
-		this.map?.boxZoom.enable();
-		this.map?.scrollZoom.enable();
 		this.map?.touchZoomRotate.enable();
 		this.map?.dragRotate.enable();
-		this.map?.keyboard.enable();
-		this.map?.doubleClickZoom.enable();
 	}
 
 	private disableMapMovement() {
