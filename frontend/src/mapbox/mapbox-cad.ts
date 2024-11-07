@@ -32,10 +32,8 @@ export class MapboxCad {
 
 	private transformedGeoJSON: FeatureCollection | null = null;
 
-	private originalCadScaleFactor: { latFactor: number; longFactor: number } = {
-		latFactor: 0,
-		longFactor: 0,
-	};
+	private nonGeoReferencedGeoJSON: FeatureCollection | null = null;
+
 
 	private fillLayer: FillLayerSpecification = {
 		id: "fill-layer",
@@ -171,11 +169,11 @@ export class MapboxCad {
 			this.originalGeoJSON =
 				await parseFileToJSON<FeatureCollection>(geoJSONFile);
 
-			const { featureCollection: transformedFeatureCollection, scaleFactor } =
+			const { featureCollection: transformedFeatureCollection, nonScaledFeatureCollection } =
 				await transformNonValidGeoJSONToValid(this.originalGeoJSON, "meters");
 
 			this.transformedGeoJSON = transformedFeatureCollection;
-			this.originalCadScaleFactor = scaleFactor;
+			this.nonGeoReferencedGeoJSON = nonScaledFeatureCollection;
 
 			const [one, two, three, four] = bbox(transformedFeatureCollection);
 
@@ -225,15 +223,13 @@ export class MapboxCad {
 	}
 
 	private getCornerForGeoReference(cornerPosition: CornerPosition) {
-		if (this.transformedGeoJSON == null || this.originalGeoJSON == null) {
+		if (this.transformedGeoJSON == null || this.originalGeoJSON == null || this.nonGeoReferencedGeoJSON == null) {
 			throw new Error("Cad GeoJSON is null");
 		}
 
 		const corner = getCornerCoordinate(this.transformedGeoJSON, cornerPosition);
-		const cornerScaled: [number, number] = [
-			corner[0] / this.originalCadScaleFactor.longFactor,
-			corner[1] / this.originalCadScaleFactor.latFactor,
-		];
+		const cornerScaled = getCornerCoordinate(this.nonGeoReferencedGeoJSON, cornerPosition);
+
 		const canvasCoords = this.map?.project(corner);
 
 		if (canvasCoords == null) {

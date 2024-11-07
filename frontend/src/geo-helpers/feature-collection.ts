@@ -51,7 +51,7 @@ export async function transformNonValidGeoJSONToValid(
 	units: "meters",
 ): Promise<{
 	featureCollection: FeatureCollection;
-	scaleFactor: { latFactor: number; longFactor: number };
+	nonScaledFeatureCollection: FeatureCollection;
 }> {
 
 	const centeredFeatureCollection = changeCenterPointOfFeatureCollection(featureCollection);
@@ -82,7 +82,7 @@ export async function transformNonValidGeoJSONToValid(
 
 	return {
 		featureCollection: createFeatureCollection(geoRefFeatures),
-		scaleFactor: { longFactor: 1, latFactor: 1 },
+		nonScaledFeatureCollection: featureCollection,
 	};
 }
 
