@@ -36,13 +36,13 @@ export function calculateDistanceBetweenCoordinates(coordinateA: [number, number
 
 export function calculateBearingBetweenCoordinates(coordinateA: [number, number], coordinateB: [number, number]) {
 	const dx = coordinateA[0] - coordinateB[0];
-	const dy = coordinateA[1] - coordinateB[1];
+	const dy = coordinateB[1] - coordinateA[1];
 
 	// Calculate the angle in radians
 	let angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
 	// Normalize the bearing to be within 0 to 360 degrees
-	angle = (angle + 360) % 360;
+	angle = (angle + 90) % 360;
 
 	return angle;
 }

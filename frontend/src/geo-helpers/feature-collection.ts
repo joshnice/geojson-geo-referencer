@@ -65,8 +65,8 @@ export async function transformNonValidGeoJSONToValid(
 				// biome-ignore lint/complexity/noForEach: <explanation>
 				feature.geometry.coordinates.forEach((coord) => {
 					const distanceFromOrigin = calculateDistanceBetweenCoordinates(ORIGIN, coord as [number, number]);
-					const bearingFromOrigin = calculateBearingBetweenCoordinates(ORIGIN, coord as [number, number])
-					const newCoord = destination(ORIGIN, distanceFromOrigin, bearingFromOrigin + 90, { units });
+					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], ORIGIN)
+					const newCoord = destination(ORIGIN, distanceFromOrigin, bearingFromOrigin, { units });
 					coords.push([newCoord.geometry.coordinates[0], newCoord.geometry.coordinates[1]]);
 				});
 				const updatedFeature: Feature = { type: "Feature", geometry: { coordinates: coords, type: "LineString" }, properties: {} };
