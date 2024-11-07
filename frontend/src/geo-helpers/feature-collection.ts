@@ -75,7 +75,8 @@ export async function transformNonValidGeoJSONToValid(
 				feature.geometry.coordinates.forEach((coord) => {
 					const distanceFromOrigin = calculateDistanceBetweenCoordinates(ORIGIN, coord as [number, number]);
 					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], ORIGIN)
-					const newCoord = destination(ORIGIN, distanceFromOrigin, bearingFromOrigin, { units: units as SupportedUnits });
+					// Hmmm? 
+					const newCoord = destination(ORIGIN, distanceFromOrigin * 1.1, bearingFromOrigin, { units: units as SupportedUnits });
 					coords.push([newCoord.geometry.coordinates[0], newCoord.geometry.coordinates[1]]);
 				});
 				const updatedFeature: Feature = { type: "Feature", geometry: { coordinates: coords, type: "LineString" }, properties: {} };
