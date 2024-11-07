@@ -12,7 +12,7 @@ export interface SubjectContext {
     $getGeoReferenceValue: Subject<GeoReferenceCadResult>;
     $searchLocationClicked: Subject<[number, number, number, number]>;
     // Upload cad subjects
-    $cadGeoJSONUpload: Subject<File>;
+    $cadGeoJSONUpload: Subject<{ file: File, unit: string }>;
     $cadStyleUpload: Subject<File>;
     $cadUploadFinished: Subject<number>;
     // Upload standard geojson subjects
@@ -29,7 +29,7 @@ export const initialSubjectContext: SubjectContext = {
     $getMapBackgroundPostion: new Subject<GetMapBackgroundPosition>(),
     $getGeoReferenceValue: new Subject<GeoReferenceCadResult>(),
     $searchLocationClicked: new Subject<[number, number, number, number]>(),
-    $cadGeoJSONUpload: new Subject<File>(),
+    $cadGeoJSONUpload: new Subject<{ file: File, unit: string }>(),
     $cadStyleUpload: new Subject<File>(),
     $cadUploadFinished: new Subject<number>,
     $geoReferencedGeoJSONUpload: new Subject<File>(),

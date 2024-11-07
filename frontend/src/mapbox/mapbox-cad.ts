@@ -165,12 +165,12 @@ export class MapboxCad {
 
 		this.$eventLock = subjects.$eventLock;
 
-		subjects.$cadGeoJSONUpload.subscribe(async (geoJSONFile) => {
+		subjects.$cadGeoJSONUpload.subscribe(async ({ file: geoJSONFile, unit }) => {
 			this.originalGeoJSON =
 				await parseFileToJSON<FeatureCollection>(geoJSONFile);
 
 			const { featureCollection: transformedFeatureCollection, nonScaledFeatureCollection } =
-				await transformNonValidGeoJSONToValid(this.originalGeoJSON, "meters");
+				await transformNonValidGeoJSONToValid(this.originalGeoJSON, unit);
 
 			this.transformedGeoJSON = transformedFeatureCollection;
 			this.nonGeoReferencedGeoJSON = nonScaledFeatureCollection;
