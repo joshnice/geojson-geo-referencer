@@ -43,10 +43,10 @@ export function UploadComponent() {
 					onChange={(event) => setUnit(event.target.value)}
 				>
 					<option value="meters">meters</option>
-					<option value="kilometers">kilometers</option>
-					<option value="centimetres">centimetres</option>
+					{/* <option value="kilometers">kilometers</option> */}
+					{/* <option value="centimetres">centimetres</option> */}
 					<option value="millimeters">millimeters</option>
-					<option value="inches">inches</option>
+					{/* <option value="inches">inches</option> */}
 				</select>
 			</div>
 			<div className="upload-option">

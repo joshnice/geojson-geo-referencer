@@ -220,6 +220,10 @@ export class MapboxCad {
 				this.map?.addLayer(layer);
 			});
 		});
+
+		subjects.$zoom.subscribe((zoom) => {
+			this.map?.setZoom(zoom);
+		});
 	}
 
 	private getCornerForGeoReference(cornerPosition: CornerPosition) {

@@ -4,6 +4,7 @@ import type { GeoReferenceCadResult, GetMapBackgroundPosition } from "../mapbox/
 
 export interface SubjectContext {
     $rotation: Subject<number>;
+    $zoom: Subject<number>;
     $geoReferenceCad: Subject<void>;
     $eventLock: Subject<MouseEvent>;
     $moveCadPosition: Subject<boolean>;
@@ -21,6 +22,7 @@ export interface SubjectContext {
 }
 
 export const initialSubjectContext: SubjectContext = {
+    $zoom: new Subject<number>(),
     $rotation: new Subject<number>(),
     $geoReferenceCad: new Subject<void>(),
     $eventLock: new Subject<MouseEvent>(),

@@ -2,6 +2,7 @@ import type { FeatureCollection, Feature } from "geojson";
 import { destination } from "@turf/destination";
 import { calculateBearingBetweenCoordinates, calculateDistanceBetweenCoordinates, flattenFeatureCoordinates } from "./coordinate-helpers";
 import { changeCenterPointOfFeatureCollection } from "./feature-collection-position";
+import { unitConversionToMeter } from "./unit-helpers";
 
 export function createFeatureCollection(
 	features: Feature[],
@@ -46,10 +47,8 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(
 
 const ORIGIN: [number, number] = [0, 0];
 
-const validUnits = ["meters", "metres", "millimeters", "centimeters", "centimetres", "kilometers", "kilometres", "miles", "nauticalmiles", "inches", "yards", "feet", "radians", "degrees"]
 
 
-type SupportedUnits = "meters" | "kilometers" | "centimetres" | "millimeters";
 
 export async function transformNonValidGeoJSONToValid(
 	featureCollection: FeatureCollection,
@@ -58,11 +57,6 @@ export async function transformNonValidGeoJSONToValid(
 	featureCollection: FeatureCollection;
 	nonScaledFeatureCollection: FeatureCollection;
 }> {
-
-	if (!validUnits.includes(units)) {
-		throw new Error(`${units} not supported`)
-	}
-
 	const centeredFeatureCollection = changeCenterPointOfFeatureCollection(featureCollection);
 
 	const geoRefFeatures: Feature[] = [];
@@ -75,8 +69,8 @@ export async function transformNonValidGeoJSONToValid(
 				feature.geometry.coordinates.forEach((coord) => {
 					const distanceFromOrigin = calculateDistanceBetweenCoordinates(ORIGIN, coord as [number, number]);
 					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], ORIGIN)
-					// Hmmm? 
-					const newCoord = destination(ORIGIN, distanceFromOrigin * 1.1, bearingFromOrigin, { units: units as SupportedUnits });
+					const distanceAfterConversion = unitConversionToMeter(distanceFromOrigin, units);
+					const newCoord = destination(ORIGIN, distanceAfterConversion, bearingFromOrigin, { units: "meters" });
 					coords.push([newCoord.geometry.coordinates[0], newCoord.geometry.coordinates[1]]);
 				});
 				const updatedFeature: Feature = { type: "Feature", geometry: { coordinates: coords, type: "LineString" }, properties: {} };

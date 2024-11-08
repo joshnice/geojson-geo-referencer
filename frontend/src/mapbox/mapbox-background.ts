@@ -159,5 +159,9 @@ export class MapboxBackground {
 		subjects.$cadGeoJSONUpload.subscribe(async () => {
 			this.cadAdded = true;
 		});
+
+		subjects.$zoom.subscribe((zoom) => {
+			this.map?.setZoom(zoom);
+		});
 	}
 }
