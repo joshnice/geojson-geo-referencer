@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import { Subject } from "rxjs";
 import type { GeoReferenceCadResult, GetMapBackgroundPosition } from "../mapbox/types";
+import type { MapBackground } from "../types/map-background";
 
 export interface SubjectContext {
     $rotation: Subject<number>;
@@ -12,6 +13,7 @@ export interface SubjectContext {
     $getMapBackgroundPostion: Subject<GetMapBackgroundPosition>;
     $getGeoReferenceValue: Subject<GeoReferenceCadResult>;
     $searchLocationClicked: Subject<[number, number, number, number]>;
+    $selectedBackground: Subject<MapBackground>;
     // Upload cad subjects
     $cadGeoJSONUpload: Subject<{ file: File, unit: string }>;
     $cadStyleUpload: Subject<File>;
@@ -36,6 +38,7 @@ export const initialSubjectContext: SubjectContext = {
     $cadUploadFinished: new Subject<number>,
     $geoReferencedGeoJSONUpload: new Subject<File>(),
     $geoReferencedStyleUpload: new Subject<File>(),
+    $selectedBackground: new Subject<MapBackground>(),
 }
 
 export const SubjectsContext = createContext<SubjectContext>(initialSubjectContext);

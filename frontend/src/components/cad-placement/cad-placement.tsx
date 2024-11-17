@@ -7,6 +7,8 @@ import { MapOptions } from "../map-options/map-options";
 import { UploadComponent } from "../upload-options/upload-options";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
+import { BackgroundSelectorComponent } from "../background-selector/background-selector";
+import { get } from "../../api/api";
 
 export function CadPlacementComponent() {
 	const subjects = useSubjectContext();
@@ -21,10 +23,20 @@ export function CadPlacementComponent() {
 		}
 	};
 
-	const onBackgroundMapElementRender = (containerElement: HTMLDivElement) => {
+	const onBackgroundMapElementRender = async (
+		containerElement: HTMLDivElement,
+	) => {
 		if (!createdBackgroundMap.current) {
 			createdBackgroundMap.current = true;
-			new MapboxBackground(containerElement, subjects);
+			const { apiKey, session: sessionToken } = await get<{
+				session: string;
+				apiKey: string;
+			}>("");
+			new MapboxBackground(
+				containerElement,
+				{ apiKey, sessionToken },
+				subjects,
+			);
 		}
 	};
 
@@ -33,6 +45,7 @@ export function CadPlacementComponent() {
 			<MapOptions />
 			<MapSearch />
 			<UploadComponent />
+			<BackgroundSelectorComponent />
 			<div
 				className="map-element"
 				style={{ zIndex: 2 }}

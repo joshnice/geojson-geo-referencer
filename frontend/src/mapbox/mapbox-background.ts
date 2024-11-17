@@ -19,6 +19,10 @@ export class MapboxBackground {
 
 	private cadAdded = false;
 
+	private userAddedGeojson: FeatureCollection | null = null;
+
+	private readonly googleMapsUrl: string;
+
 	private readonly lineLayer: LineLayerSpecification = {
 		id: "line-layer",
 		type: "line",
@@ -31,18 +35,18 @@ export class MapboxBackground {
 		filter: ["==", ["geometry-type"], "LineString"],
 	}
 
-	constructor(element: HTMLDivElement, subjects: SubjectContext) {
+	constructor(element: HTMLDivElement, googleMaps: { sessionToken: string, apiKey: string }, subjects: SubjectContext) {
 		this.map = new Map({
 			container: element,
 			center: [0, 0],
 			zoom: 2,
 			projection: "mercator",
-			// style: "mapbox://styles/mapbox/dark-v11",
-			// style: "mapbox://styles/mapbox/standard",
-			style: "mapbox://styles/mapbox/light-v11",
+			style: "mapbox://styles/mapbox/standard",
 			maxPitch: 0,
 			maxZoom: 24
 		});
+
+		this.googleMapsUrl = `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${googleMaps.sessionToken}&key=${googleMaps.apiKey}`;
 
 		this.map.doubleClickZoom.disable();
 		this.setUpSubjects(subjects);
@@ -111,6 +115,7 @@ export class MapboxBackground {
 		subjects.$geoReferencedGeoJSONUpload.subscribe(async (geoJSONFile) => {
 			const geojson = await parseFileToJSON<FeatureCollection>(geoJSONFile);
 			this.map.addSource(this.sourceId, { type: "geojson", data: geojson });
+			this.userAddedGeojson = geojson;
 
 			if (!this.map.getStyle()?.layers.some((l) => l.source === this.sourceId)) {
 				this.map.addLayer(this.lineLayer);
@@ -163,5 +168,48 @@ export class MapboxBackground {
 		subjects.$zoom.subscribe((zoom) => {
 			this.map?.setZoom(zoom);
 		});
+
+		subjects.$selectedBackground.subscribe((selectedBackground) => {
+
+			const customLayers = this.map.getStyle()?.layers.filter((l) => l.source === this.sourceId);
+
+			switch (selectedBackground) {
+				case "mapbox-dark":
+					this.map.setStyle("mapbox://styles/mapbox/dark-v11");
+					break;
+				case "mapbox-light":
+					this.map.setStyle("mapbox://styles/mapbox/light-v11");
+					break;
+				case "mapbox-standard":
+					this.map.setStyle("mapbox://styles/mapbox/standard");
+					break;
+				case "google-map-sat": {
+					const googleMapSatStyle: StyleSpecification = {
+						version: 8,
+						layers: [
+							{ id: "google-maps", type: "raster", source: "google-maps" }
+						],
+						sources: {
+							"google-maps": { type: "raster", tiles: [this.googleMapsUrl] }
+						}
+					}
+					this.map.setStyle(googleMapSatStyle);
+				}
+					break;
+				default:
+					throw new Error(`Background ${selectedBackground} not handled`);
+			}
+
+			this.map.once("idle", () => {
+				if (this.userAddedGeojson != null) {
+					this.map.addSource(this.sourceId, { type: "geojson", data: this.userAddedGeojson });
+					// biome-ignore lint/complexity/noForEach: <explanation>
+					customLayers?.forEach((layer) => {
+						this.map.addLayer(layer);
+					})
+				}
+			})
+
+		})
 	}
 }
