@@ -25,6 +25,7 @@ export function BackgroundSelectorComponent() {
 			<option value="mapbox-light">Mapbox Light</option>
 			<option value="mapbox-dark">Mapbox Dark</option>
 			<option value="google-map-sat">Google Maps Satellite</option>
+			<option value="ordinance-survey">Ordinance Survey (UK Only)</option>
 		</select>
 	);
 }

@@ -39,9 +39,9 @@ export class GeoReferenceToolStack extends cdk.Stack {
       },
     });
 
-    const { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_SESSION_FILE_NAME } = process.env;
+    const { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_SESSION_FILE_NAME, OS_API_KEY } = process.env;
 
-    if (GOOGLE_MAPS_API_KEY == null || GOOGLE_MAPS_SESSION_FILE_NAME == null) {
+    if (GOOGLE_MAPS_API_KEY == null || GOOGLE_MAPS_SESSION_FILE_NAME == null || OS_API_KEY == null) {
       throw new Error("Missing environment variables");
     }
 
@@ -54,6 +54,7 @@ export class GeoReferenceToolStack extends cdk.Stack {
         GOOGLE_MAPS_API_KEY,
         GOOGLE_MAPS_BUCKET_NAME: `${name}-google-maps-api-bucket`,
         GOOGLE_MAPS_SESSION_FILE_NAME,
+        OS_API_KEY
       }
     });
 

@@ -23,6 +23,8 @@ export class MapboxBackground {
 
 	private readonly googleMapsUrl: string;
 
+	private readonly osMapsUrl: string;
+
 	private readonly lineLayer: LineLayerSpecification = {
 		id: "line-layer",
 		type: "line",
@@ -35,7 +37,7 @@ export class MapboxBackground {
 		filter: ["==", ["geometry-type"], "LineString"],
 	}
 
-	constructor(element: HTMLDivElement, googleMaps: { sessionToken: string, apiKey: string }, subjects: SubjectContext) {
+	constructor(element: HTMLDivElement, mapApiKeys: { googleMapsApiKey: string, googleMapsSessionKey: string, osMapsApiKey: string }, subjects: SubjectContext) {
 		this.map = new Map({
 			container: element,
 			center: [0, 0],
@@ -43,10 +45,11 @@ export class MapboxBackground {
 			projection: "mercator",
 			style: "mapbox://styles/mapbox/standard",
 			maxPitch: 0,
-			maxZoom: 24
+			maxZoom: 24,
 		});
 
-		this.googleMapsUrl = `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${googleMaps.sessionToken}&key=${googleMaps.apiKey}`;
+		this.googleMapsUrl = `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${mapApiKeys.googleMapsSessionKey}&key=${mapApiKeys.googleMapsApiKey}`;
+		this.osMapsUrl = `https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=${mapApiKeys.osMapsApiKey}`
 
 		this.map.doubleClickZoom.disable();
 		this.setUpSubjects(subjects);
@@ -195,6 +198,9 @@ export class MapboxBackground {
 					}
 					this.map.setStyle(googleMapSatStyle);
 				}
+					break;
+				case "ordinance-survey":
+					this.map.setStyle(this.osMapsUrl);
 					break;
 				default:
 					throw new Error(`Background ${selectedBackground} not handled`);

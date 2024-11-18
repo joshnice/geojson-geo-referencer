@@ -28,13 +28,15 @@ export function CadPlacementComponent() {
 	) => {
 		if (!createdBackgroundMap.current) {
 			createdBackgroundMap.current = true;
-			const { apiKey, session: sessionToken } = await get<{
-				session: string;
-				apiKey: string;
-			}>("");
+			const { googleMapsApiKey, googleMapsSessionKey, osMapsApiKey } =
+				await get<{
+					googleMapsApiKey: string;
+					googleMapsSessionKey: string;
+					osMapsApiKey: string;
+				}>();
 			new MapboxBackground(
 				containerElement,
-				{ apiKey, sessionToken },
+				{ googleMapsApiKey, googleMapsSessionKey, osMapsApiKey },
 				subjects,
 			);
 		}

@@ -3,6 +3,7 @@ import { getGoogleMapsApiKey, getGoogleMapsBucketName, getGoogleMapsSessionFileN
 import { getFileFromS3 } from "./s3/get-file";
 import { getNewGoogleMapsToken } from "./google-maps/get-new-token";
 import { updateFile } from "./s3/update-file";
+import { getOrdinaceSurveyApiKey } from "./environment/ordinance-survey-env-vars";
 
 export const handler: Handler = async (
 	event: {
@@ -15,6 +16,7 @@ export const handler: Handler = async (
 	const googleMapApiKey = getGoogleMapsApiKey();
 	const googleMapsBucketName = getGoogleMapsBucketName();
 	const googleMapsSessionFileName = getGoogleMapsSessionFileName();
+	const osMapsApiKey = getOrdinaceSurveyApiKey();
 
 	const sessionFile = await getFileFromS3(googleMapsBucketName, googleMapsSessionFileName);
 
@@ -30,11 +32,11 @@ export const handler: Handler = async (
 		await updateFile(googleMapsBucketName, googleMapsSessionFileName, JSON.stringify(sessionContents));
 	}
 
-
 	return {
 		body: JSON.stringify({
-			session: sessionContents.session,
-			apiKey: googleMapApiKey
+			googleMapsSessionKey: sessionContents.session,
+			googleMapsApiKey: googleMapApiKey,
+			osMapsApiKey: osMapsApiKey,
 		}),
 		headers: {
 			"Access-Control-Allow-Origin": "*",
