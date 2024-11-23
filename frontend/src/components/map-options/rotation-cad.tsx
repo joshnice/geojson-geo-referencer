@@ -6,8 +6,6 @@ export function RotationCad() {
 	const handleRotationChange = (valStr: string) => {
 		const valNumber = Number.parseFloat(valStr);
 		if (!Number.isNaN(valNumber)) {
-			console.log("handleRotationChange", valNumber);
-
 			if (valNumber > 360) {
 				setRotaion(0);
 				return;
@@ -27,12 +25,7 @@ export function RotationCad() {
 	return (
 		<div className="control-option">
 			<p className="control-label">Rotation </p>
-			<input
-				className="number-input"
-				type="number"
-				value={readableBearing}
-				onChange={(event) => handleRotationChange(event.target.value)}
-			/>
+			<input className="number-input" type="number" value={readableBearing} onChange={(event) => handleRotationChange(event.target.value)} />
 		</div>
 	);
 }

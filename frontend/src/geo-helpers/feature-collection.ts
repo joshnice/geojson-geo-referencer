@@ -4,15 +4,11 @@ import { calculateBearingBetweenCoordinates, calculateDistanceBetweenCoordinates
 import { changeCenterPointOfFeatureCollection } from "./feature-collection-position";
 import { unitConversionToMeter } from "./unit-helpers";
 
-export function createFeatureCollection(
-	features: Feature[],
-): FeatureCollection {
+export function createFeatureCollection(features: Feature[]): FeatureCollection {
 	return { type: "FeatureCollection", features };
 }
 
-export function findHighestAndLowestCoordinatesInFeatureCollection(
-	featureCollection: FeatureCollection,
-) {
+export function findHighestAndLowestCoordinatesInFeatureCollection(featureCollection: FeatureCollection) {
 	let highestLong = Number.NEGATIVE_INFINITY;
 	let highestLat = Number.NEGATIVE_INFINITY;
 	let lowestLong = Number.POSITIVE_INFINITY;
@@ -45,9 +41,6 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(
 
 const ORIGIN: [number, number] = [0, 0];
 
-
-
-
 export async function transformNonValidGeoJSONToValid(
 	featureCollection: FeatureCollection,
 	units: string,
@@ -66,12 +59,16 @@ export async function transformNonValidGeoJSONToValid(
 
 				feature.geometry.coordinates.forEach((coord) => {
 					const distanceFromOrigin = calculateDistanceBetweenCoordinates(ORIGIN, coord as [number, number]);
-					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], ORIGIN)
+					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], ORIGIN);
 					const distanceAfterConversion = unitConversionToMeter(distanceFromOrigin, units);
 					const newCoord = destination(ORIGIN, distanceAfterConversion, bearingFromOrigin, { units: "meters" });
 					coords.push([newCoord.geometry.coordinates[0], newCoord.geometry.coordinates[1]]);
 				});
-				const updatedFeature: Feature = { type: "Feature", geometry: { coordinates: coords, type: "LineString" }, properties: {} };
+				const updatedFeature: Feature = {
+					type: "Feature",
+					geometry: { coordinates: coords, type: "LineString" },
+					properties: {},
+				};
 				geoRefFeatures.push(updatedFeature);
 				break;
 			}
@@ -81,28 +78,21 @@ export async function transformNonValidGeoJSONToValid(
 		}
 	});
 
-
 	return {
 		featureCollection: createFeatureCollection(geoRefFeatures),
 		nonScaledFeatureCollection: featureCollection,
 	};
 }
 
-export function getClosestCadCoordinate(
-	featureCollection: FeatureCollection,
-	coordinate: [number, number],
-) {
+export function getClosestCadCoordinate(featureCollection: FeatureCollection, coordinate: [number, number]) {
 	let totalDiff = Number.POSITIVE_INFINITY;
 	let closestCoordinate: [number, number] | null = null;
-
 
 	featureCollection.features.forEach((feature) => {
 		const flattenedCoordinates = flattenFeatureCoordinates(feature);
 
-
 		flattenedCoordinates.forEach(([long, lat]) => {
-			const diff =
-				Math.abs(long - coordinate[0]) + Math.abs(lat - coordinate[1]);
+			const diff = Math.abs(long - coordinate[0]) + Math.abs(lat - coordinate[1]);
 			if (diff < totalDiff) {
 				totalDiff = diff;
 				closestCoordinate = [long, lat];
