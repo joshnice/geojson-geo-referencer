@@ -178,7 +178,7 @@ export class MapboxCad {
 			this.mapBackgroundCenter = center;
 		});
 
-		subjects.$cadGeoJSONUpload.subscribe(async ({ file: geoJSONFile, unit }) => {
+		subjects.$cadGeoJSONUpload.subscribe(async ({ file: geoJSONFile, units: unit }) => {
 			this.originalGeoJSON = await parseFileToJSON<FeatureCollection>(geoJSONFile);
 
 			const { featureCollection: transformedFeatureCollection, nonScaledFeatureCollection } = await transformNonValidGeoJSONToValid(this.originalGeoJSON, unit, this.origin ?? this.mapBackgroundCenter);
