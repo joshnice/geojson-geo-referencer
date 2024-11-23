@@ -8,20 +8,14 @@ import mapboxgl, {
 } from "mapbox-gl";
 import type { FeatureCollection } from "geojson";
 import { bbox } from "@turf/bbox";
-import {
-	getClosestCadCoordinate as getClosestFeatureCollectionCoordinate,
-	transformNonValidGeoJSONToValid,
-} from "../geo-helpers/feature-collection";
+import { getClosestCadCoordinate as getClosestFeatureCollectionCoordinate, transformNonValidGeoJSONToValid } from "../geo-helpers/feature-collection";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
 import type { Subject } from "rxjs";
-import {
-	type CornerPosition,
-	getCornerCoordinate,
-} from "../geo-helpers/get-feature-collection-corners";
+import { type CornerPosition, getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import type { SubjectContext } from "../state/subjects-context";
+import { getAvgLongLat } from "../geo-helpers/feature-collection-stats";
 
-mapboxgl.accessToken =
-	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
+mapboxgl.accessToken = "pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
 
 export class MapboxCad {
 	private map: Map | null = null;
@@ -34,17 +28,20 @@ export class MapboxCad {
 
 	private nonGeoReferencedGeoJSON: FeatureCollection | null = null;
 
+	private origin: [number, number] | null = null;
+
+	private mapBackgroundCenter: [number, number] = [0, 0];
 
 	private fillLayer: FillLayerSpecification = {
 		id: "fill-layer",
 		type: "fill",
 		paint: {
 			"fill-opacity": 0.7,
-			"fill-color": "green"
+			"fill-color": "green",
 		},
 		source: this.sourceId,
 		filter: ["==", ["geometry-type"], "Polygon"],
-	}
+	};
 
 	private lineLayer: LineLayerSpecification = {
 		id: "line-layer",
@@ -52,7 +49,7 @@ export class MapboxCad {
 		paint: {
 			"line-color": "red",
 			"line-width": 1,
-			"line-opacity": 0.7
+			"line-opacity": 0.7,
 		},
 		source: this.sourceId,
 		filter: ["==", ["geometry-type"], "LineString"],
@@ -62,32 +59,25 @@ export class MapboxCad {
 		id: "text-layer",
 		type: "symbol",
 		layout: {
-			"text-field": ["get", "text"]
+			"text-field": ["get", "text"],
 		},
 		source: this.sourceId,
 		filter: ["==", ["geometry-type"], "Point"],
-	}
+	};
 
 	private $eventLock: Subject<MouseEvent> | null = null;
 
-	constructor(
-		element: HTMLDivElement,
-		subjects: SubjectContext,
-	) {
+	constructor(element: HTMLDivElement, subjects: SubjectContext) {
 		this.createMap(element);
 		this.setUpSubjects(subjects);
 		this.handleMapRotatation(subjects);
 	}
 
-	private async createMap(
-		element: HTMLDivElement,
-	) {
-
-
+	private async createMap(element: HTMLDivElement) {
 		this.map = new mapboxgl.Map({
 			container: element,
 			center: [0, 0],
-			zoom: 1,
+			zoom: 2,
 			projection: "mercator",
 			maxPitch: 0,
 			style: {
@@ -132,8 +122,8 @@ export class MapboxCad {
 
 	private handleMapRotatation(subjects: SubjectContext) {
 		this.map?.on("rotate", () => {
-			subjects.$rotation.next(this.getMapBearingValue())
-		})
+			subjects.$rotation.next(this.getMapBearingValue());
+		});
 
 		subjects.$rotation.subscribe((rotation) => {
 			if (rotation !== this.getMapBearingValue()) {
@@ -152,7 +142,6 @@ export class MapboxCad {
 	}
 
 	private setUpSubjects(subjects: SubjectContext) {
-
 		subjects.$moveCadPosition.subscribe((move) => {
 			if (move) {
 				this.enableMapMovement();
@@ -185,12 +174,14 @@ export class MapboxCad {
 
 		this.$eventLock = subjects.$eventLock;
 
-		subjects.$cadGeoJSONUpload.subscribe(async ({ file: geoJSONFile, unit }) => {
-			this.originalGeoJSON =
-				await parseFileToJSON<FeatureCollection>(geoJSONFile);
+		subjects.$backgroundMapCenter.subscribe((center) => {
+			this.mapBackgroundCenter = center;
+		});
 
-			const { featureCollection: transformedFeatureCollection, nonScaledFeatureCollection } =
-				await transformNonValidGeoJSONToValid(this.originalGeoJSON, unit);
+		subjects.$cadGeoJSONUpload.subscribe(async ({ file: geoJSONFile, unit }) => {
+			this.originalGeoJSON = await parseFileToJSON<FeatureCollection>(geoJSONFile);
+
+			const { featureCollection: transformedFeatureCollection, nonScaledFeatureCollection } = await transformNonValidGeoJSONToValid(this.originalGeoJSON, unit, this.origin ?? this.mapBackgroundCenter);
 
 			this.transformedGeoJSON = transformedFeatureCollection;
 			this.nonGeoReferencedGeoJSON = nonScaledFeatureCollection;
@@ -211,9 +202,14 @@ export class MapboxCad {
 			subjects.$cadUploadFinished.next(zoom);
 		});
 
-		subjects.$cadStyleUpload.subscribe(async (styleFile) => {
-			const styleSpec = await parseFileToJSON<StyleSpecification>(styleFile)
+		subjects.$geoReferencedGeoJSONUpload.subscribe(async (geoJSONFile) => {
+			const geoReferencedFeatureCollection = await parseFileToJSON<FeatureCollection>(geoJSONFile);
+			const { long, lat } = getAvgLongLat(geoReferencedFeatureCollection);
+			this.origin = [long, lat];
+		});
 
+		subjects.$cadStyleUpload.subscribe(async (styleFile) => {
+			const styleSpec = await parseFileToJSON<StyleSpecification>(styleFile);
 
 			styleSpec?.layers.forEach((l) => {
 				l.source = this.sourceId;
@@ -228,13 +224,11 @@ export class MapboxCad {
 				}
 			});
 
-
 			this.map?.getStyle()?.layers.forEach((layer) => {
 				if (layer.source === this.sourceId) {
 					this.map?.removeLayer(layer.id);
 				}
 			});
-
 
 			styleSpec.layers.forEach((layer) => {
 				this.map?.addLayer(layer);
@@ -262,10 +256,7 @@ export class MapboxCad {
 
 		return {
 			canvas: [canvasCoords.x, canvasCoords.y] as [number, number],
-			cad: getClosestFeatureCollectionCoordinate(
-				this.originalGeoJSON,
-				cornerScaled,
-			),
+			cad: getClosestFeatureCollectionCoordinate(this.originalGeoJSON, cornerScaled),
 		};
 	}
 

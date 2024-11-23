@@ -7,8 +7,7 @@ import type { SubjectContext } from "../state/subjects-context";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
 import bbox from "@turf/bbox";
 
-mapboxgl.accessToken =
-	"pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
+mapboxgl.accessToken = "pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
 
 export class MapboxBackground {
 	private readonly map: Map;
@@ -31,13 +30,13 @@ export class MapboxBackground {
 		paint: {
 			"line-color": "red",
 			"line-width": 1,
-			"line-opacity": 0.7
+			"line-opacity": 0.7,
 		},
 		source: this.sourceId,
 		filter: ["==", ["geometry-type"], "LineString"],
-	}
+	};
 
-	constructor(element: HTMLDivElement, mapApiKeys: { googleMapsApiKey: string, googleMapsSessionKey: string, osMapsApiKey: string }, subjects: SubjectContext) {
+	constructor(element: HTMLDivElement, mapApiKeys: { googleMapsApiKey: string; googleMapsSessionKey: string; osMapsApiKey: string }, subjects: SubjectContext) {
 		this.map = new Map({
 			container: element,
 			center: [0, 0],
@@ -46,13 +45,22 @@ export class MapboxBackground {
 			style: "mapbox://styles/mapbox/standard",
 			maxPitch: 0,
 			maxZoom: 24,
+			bearingSnap: 0,
 		});
 
 		this.googleMapsUrl = `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${mapApiKeys.googleMapsSessionKey}&key=${mapApiKeys.googleMapsApiKey}`;
-		this.osMapsUrl = `https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=${mapApiKeys.osMapsApiKey}`
+		this.osMapsUrl = `https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=${mapApiKeys.osMapsApiKey}`;
 
 		this.map.doubleClickZoom.disable();
 		this.setUpSubjects(subjects);
+		this.setUpEvents(subjects);
+	}
+
+	private setUpEvents(subjects: SubjectContext) {
+		this.map.on("moveend", () => {
+			const center = this.map.getCenter();
+			subjects.$backgroundMapCenter.next([center.lng, center.lat]);
+		});
 	}
 
 	private setUpSubjects(subjects: SubjectContext) {
@@ -78,21 +86,13 @@ export class MapboxBackground {
 		});
 
 		subjects.$getMapBackgroundPostion.subscribe((pos) => {
-			const realWorldTopRight = this.map
-				.unproject(pos.canvasPositions.topRight)
-				?.toArray();
+			const realWorldTopRight = this.map.unproject(pos.canvasPositions.topRight)?.toArray();
 
-			const realWorldTopLeft = this.map
-				.unproject(pos.canvasPositions.topLeft)
-				?.toArray();
+			const realWorldTopLeft = this.map.unproject(pos.canvasPositions.topLeft)?.toArray();
 
-			const realWorldBottomLeft = this.map
-				.unproject(pos.canvasPositions.bottomLeft)
-				?.toArray();
+			const realWorldBottomLeft = this.map.unproject(pos.canvasPositions.bottomLeft)?.toArray();
 
-			const realWorldBottomRight = this.map
-				.unproject(pos.canvasPositions.bottomRight)
-				?.toArray();
+			const realWorldBottomRight = this.map.unproject(pos.canvasPositions.bottomRight)?.toArray();
 
 			const realWorldLocation: GeoReferenceCadResult = {
 				originalCadPosition: {
@@ -126,13 +126,12 @@ export class MapboxBackground {
 
 			if (!this.cadAdded) {
 				const [one, two, three, four] = bbox(geojson);
-				this.map?.fitBounds([one, two, three, four], { duration: 0 });
+				this.map?.fitBounds([one, two, three, four], { duration: 0, padding: 20 });
 			}
 		});
 
 		subjects.$geoReferencedStyleUpload.subscribe(async (styleFile) => {
-			const styleSpec = await parseFileToJSON<StyleSpecification>(styleFile)
-
+			const styleSpec = await parseFileToJSON<StyleSpecification>(styleFile);
 
 			styleSpec?.layers.forEach((l) => {
 				l.source = this.sourceId;
@@ -147,13 +146,11 @@ export class MapboxBackground {
 				}
 			});
 
-
 			this.map?.getStyle()?.layers.forEach((layer) => {
 				if (layer.source === this.sourceId) {
 					this.map?.removeLayer(layer.id);
 				}
 			});
-
 
 			styleSpec.layers.forEach((layer) => {
 				this.map?.addLayer(layer);
@@ -162,7 +159,7 @@ export class MapboxBackground {
 
 		subjects.$cadUploadFinished.subscribe((zoom) => {
 			this.map.setZoom(zoom);
-		})
+		});
 
 		subjects.$cadGeoJSONUpload.subscribe(async () => {
 			this.cadAdded = true;
@@ -173,7 +170,6 @@ export class MapboxBackground {
 		});
 
 		subjects.$selectedBackground.subscribe((selectedBackground) => {
-
 			const customLayers = this.map.getStyle()?.layers.filter((l) => l.source === this.sourceId);
 
 			switch (selectedBackground) {
@@ -186,18 +182,17 @@ export class MapboxBackground {
 				case "mapbox-standard":
 					this.map.setStyle("mapbox://styles/mapbox/standard");
 					break;
-				case "google-map-sat": {
-					const googleMapSatStyle: StyleSpecification = {
-						version: 8,
-						layers: [
-							{ id: "google-maps", type: "raster", source: "google-maps" }
-						],
-						sources: {
-							"google-maps": { type: "raster", tiles: [this.googleMapsUrl] }
-						}
+				case "google-map-sat":
+					{
+						const googleMapSatStyle: StyleSpecification = {
+							version: 8,
+							layers: [{ id: "google-maps", type: "raster", source: "google-maps" }],
+							sources: {
+								"google-maps": { type: "raster", tiles: [this.googleMapsUrl] },
+							},
+						};
+						this.map.setStyle(googleMapSatStyle);
 					}
-					this.map.setStyle(googleMapSatStyle);
-				}
 					break;
 				case "ordinance-survey":
 					this.map.setStyle(this.osMapsUrl);
@@ -212,10 +207,9 @@ export class MapboxBackground {
 
 					customLayers?.forEach((layer) => {
 						this.map.addLayer(layer);
-					})
+					});
 				}
-			})
-
-		})
+			});
+		});
 	}
 }

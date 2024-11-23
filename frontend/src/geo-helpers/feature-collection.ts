@@ -1,5 +1,5 @@
 import type { FeatureCollection, Feature } from "geojson";
-import { destination } from "@turf/destination";
+import { rhumbDestination } from "@turf/rhumb-destination";
 import { calculateBearingBetweenCoordinates, calculateDistanceBetweenCoordinates, flattenFeatureCoordinates } from "./coordinate-helpers";
 import { changeCenterPointOfFeatureCollection } from "./feature-collection-position";
 import { unitConversionToMeter } from "./unit-helpers";
@@ -39,11 +39,10 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(featureCollec
 	return { highestLong, highestLat, lowestLat, lowestLong };
 }
 
-const ORIGIN: [number, number] = [0, 0];
-
 export async function transformNonValidGeoJSONToValid(
 	featureCollection: FeatureCollection,
 	units: string,
+	origin: [number, number],
 ): Promise<{
 	featureCollection: FeatureCollection;
 	nonScaledFeatureCollection: FeatureCollection;
@@ -58,10 +57,10 @@ export async function transformNonValidGeoJSONToValid(
 				const coords: [number, number][] = [];
 
 				feature.geometry.coordinates.forEach((coord) => {
-					const distanceFromOrigin = calculateDistanceBetweenCoordinates(ORIGIN, coord as [number, number]);
-					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], ORIGIN);
+					const distanceFromOrigin = calculateDistanceBetweenCoordinates(origin, coord as [number, number]);
+					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], origin);
 					const distanceAfterConversion = unitConversionToMeter(distanceFromOrigin, units);
-					const newCoord = destination(ORIGIN, distanceAfterConversion, bearingFromOrigin, { units: "meters" });
+					const newCoord = rhumbDestination(origin, distanceAfterConversion, bearingFromOrigin, { units: "meters" });
 					coords.push([newCoord.geometry.coordinates[0], newCoord.geometry.coordinates[1]]);
 				});
 				const updatedFeature: Feature = {
