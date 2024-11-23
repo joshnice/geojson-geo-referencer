@@ -8,7 +8,7 @@ export function filterCoordinatesViaMaxLongLat(
 	maxLat: number,
 ) {
 	const validFeatures: Feature[] = [];
-	// biome-ignore lint/complexity/noForEach: <explanation>
+
 	featureCollection.features.forEach((feature) => {
 		const validCoords = !flattenFeatureCoordinates(feature).some(
 			([long, lat]) => long > maxLong || lat > maxLat,

@@ -18,11 +18,9 @@ export function findHighestAndLowestCoordinatesInFeatureCollection(
 	let lowestLong = Number.POSITIVE_INFINITY;
 	let lowestLat = Number.POSITIVE_INFINITY;
 
-	// biome-ignore lint/complexity/noForEach: <explanation>
 	featureCollection.features.forEach((feature) => {
 		const flattenedCoordinates = flattenFeatureCoordinates(feature);
 
-		// biome-ignore lint/complexity/noForEach: <explanation>
 		flattenedCoordinates.forEach(([long, lat]) => {
 			if (long > highestLong) {
 				highestLong = long;
@@ -60,12 +58,12 @@ export async function transformNonValidGeoJSONToValid(
 	const centeredFeatureCollection = changeCenterPointOfFeatureCollection(featureCollection);
 
 	const geoRefFeatures: Feature[] = [];
-	// biome-ignore lint/complexity/noForEach: <explanation>
+
 	centeredFeatureCollection.features.forEach((feature) => {
 		switch (feature.geometry.type) {
 			case "LineString": {
 				const coords: [number, number][] = [];
-				// biome-ignore lint/complexity/noForEach: <explanation>
+
 				feature.geometry.coordinates.forEach((coord) => {
 					const distanceFromOrigin = calculateDistanceBetweenCoordinates(ORIGIN, coord as [number, number]);
 					const bearingFromOrigin = calculateBearingBetweenCoordinates(coord as [number, number], ORIGIN)
@@ -97,11 +95,11 @@ export function getClosestCadCoordinate(
 	let totalDiff = Number.POSITIVE_INFINITY;
 	let closestCoordinate: [number, number] | null = null;
 
-	// biome-ignore lint/complexity/noForEach: <explanation>
+
 	featureCollection.features.forEach((feature) => {
 		const flattenedCoordinates = flattenFeatureCoordinates(feature);
 
-		// biome-ignore lint/complexity/noForEach: <explanation>
+
 		flattenedCoordinates.forEach(([long, lat]) => {
 			const diff =
 				Math.abs(long - coordinate[0]) + Math.abs(lat - coordinate[1]);

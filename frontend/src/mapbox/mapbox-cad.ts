@@ -214,7 +214,7 @@ export class MapboxCad {
 		subjects.$cadStyleUpload.subscribe(async (styleFile) => {
 			const styleSpec = await parseFileToJSON<StyleSpecification>(styleFile)
 
-			// biome-ignore lint/complexity/noForEach: <explanation>
+
 			styleSpec?.layers.forEach((l) => {
 				l.source = this.sourceId;
 				// biome-ignore lint/performance/noDelete: <explanation>
@@ -228,14 +228,14 @@ export class MapboxCad {
 				}
 			});
 
-			// biome-ignore lint/complexity/noForEach: <explanation>
+
 			this.map?.getStyle()?.layers.forEach((layer) => {
 				if (layer.source === this.sourceId) {
 					this.map?.removeLayer(layer.id);
 				}
 			});
 
-			// biome-ignore lint/complexity/noForEach: <explanation>
+
 			styleSpec.layers.forEach((layer) => {
 				this.map?.addLayer(layer);
 			});

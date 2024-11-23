@@ -13,10 +13,10 @@ export function getCornerCoordinate(
 ): [number, number] {
 	let cornerCoordinate: [number, number] | null = null;
 
-	// biome-ignore lint/complexity/noForEach: <explanation>
+
 	featureCollection.features.forEach((feature) => {
 		const flattenedCoordinates = flattenFeatureCoordinates(feature);
-		// biome-ignore lint/complexity/noForEach: <explanation>
+
 		flattenedCoordinates.forEach((compCoord) => {
 			if (cornerCoordinate == null) {
 				cornerCoordinate = compCoord as [number, number];
