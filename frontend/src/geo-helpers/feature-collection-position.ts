@@ -1,9 +1,9 @@
 import type { FeatureCollection, Feature } from "geojson";
 import { getCornerCoordinate } from "./get-feature-collection-corners";
-import { calculateDistanceBetweenCoordinates, findCenterOfTwoCoordinates, flattenFeatureCoordinates } from "./coordinate-helpers";
+import { findCenterOfTwoCoordinates } from "./coordinate-helpers";
 import { modifyFeatureWithVector } from "./translate-feature";
 import { createFeatureCollection } from "./feature-collection";
-import { filterFeatureCollectionOnDistance } from "./feature-collection-stats";
+import { filterFeatureCollectionOnDistance } from "./filter-feature-collection";
 
 export function findCenterOfFeatureCollection(featureCollection: FeatureCollection) {
 	const bottomLeft = getCornerCoordinate(featureCollection, "bottom-left");
