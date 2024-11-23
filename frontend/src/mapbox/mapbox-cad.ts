@@ -76,6 +76,7 @@ export class MapboxCad {
 	) {
 		this.createMap(element);
 		this.setUpSubjects(subjects);
+		this.handleMapRotatation(subjects);
 	}
 
 	private async createMap(
@@ -96,6 +97,7 @@ export class MapboxCad {
 				glyphs: "mapbox://fonts/joshnice/{fontstack}/{range}.pbf",
 			},
 			maxZoom: 24,
+			bearingSnap: 0,
 		});
 
 		this.disableMapMovement();
@@ -128,10 +130,28 @@ export class MapboxCad {
 		});
 	}
 
-	private setUpSubjects(subjects: SubjectContext) {
+	private handleMapRotatation(subjects: SubjectContext) {
+		this.map?.on("rotate", () => {
+			subjects.$rotation.next(this.getMapBearingValue())
+		})
+
 		subjects.$rotation.subscribe((rotation) => {
-			this.map?.setBearing(rotation);
+			if (rotation !== this.getMapBearingValue()) {
+				const bearing = this.getMapBearingValue(rotation);
+				this.map?.setBearing(bearing);
+			}
 		});
+	}
+
+	private getMapBearingValue(bearing = this.map?.getBearing()) {
+		if (bearing != null) {
+			const parsedBearing = bearing < 0 ? 360 + bearing : bearing;
+			return Number.parseFloat(parsedBearing.toString());
+		}
+		throw new Error("Bearing is null");
+	}
+
+	private setUpSubjects(subjects: SubjectContext) {
 
 		subjects.$moveCadPosition.subscribe((move) => {
 			if (move) {
