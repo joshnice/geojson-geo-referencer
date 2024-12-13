@@ -9,7 +9,7 @@ export function MapZoomComponent() {
 	const handleSetZoomLevel = (event: ChangeEvent<HTMLInputElement>) => {
 		const updatedValue = Number.parseFloat(Number.parseFloat(event.target.value).toFixed(2));
 		setValue(updatedValue);
-		$zoom.next(updatedValue);
+		$zoom.next({ source: "toolbar", value: updatedValue });
 	};
 
 	useEffect(() => {

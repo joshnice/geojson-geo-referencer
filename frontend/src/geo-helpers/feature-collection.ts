@@ -1,8 +1,8 @@
-import type { FeatureCollection, Feature } from "geojson";
 import { rhumbDestination } from "@turf/rhumb-destination";
+import type { Feature, FeatureCollection } from "geojson";
+import type { Units } from "../types/units";
 import { calculateBearingBetweenCoordinates, calculateDistanceBetweenCoordinates, flattenFeatureCoordinates } from "./coordinate-helpers";
 import { changeCenterPointOfFeatureCollection } from "./feature-collection-position";
-import type { Units } from "../types/units";
 
 export function createFeatureCollection(features: Feature[]): FeatureCollection {
 	return { type: "FeatureCollection", features };
@@ -65,7 +65,7 @@ export async function transformNonValidGeoJSONToValid(
 				const updatedFeature: Feature = {
 					type: "Feature",
 					geometry: { coordinates: coords, type: "LineString" },
-					properties: {},
+					properties: feature.properties,
 				};
 				geoRefFeatures.push(updatedFeature);
 				break;

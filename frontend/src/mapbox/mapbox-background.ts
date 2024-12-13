@@ -1,11 +1,11 @@
+import bbox from "@turf/bbox";
+import type { FeatureCollection } from "geojson";
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 import mapboxgl, { type LineLayerSpecification, Map, type StyleSpecification } from "mapbox-gl";
-import type { FeatureCollection } from "geojson";
-import type { GeoReferenceCadResult } from "./types";
+import { parseFileToJSON } from "../file-helpers/file-to-json";
 import { roundCoordinate } from "../geo-helpers/coordinate-helpers";
 import type { SubjectContext } from "../state/subjects-context";
-import { parseFileToJSON } from "../file-helpers/file-to-json";
-import bbox from "@turf/bbox";
+import type { GeoReferenceCadResult } from "./types";
 
 mapboxgl.accessToken = "pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
 
@@ -165,8 +165,8 @@ export class MapboxBackground {
 			this.cadAdded = true;
 		});
 
-		subjects.$zoom.subscribe((zoom) => {
-			this.map?.setZoom(zoom);
+		subjects.$zoom.subscribe(({ value }) => {
+			this.map?.setZoom(value);
 		});
 
 		subjects.$selectedBackground.subscribe((selectedBackground) => {

@@ -1,24 +1,16 @@
-import mapboxgl, {
-	type SymbolLayerSpecification,
-	type FillLayerSpecification,
-	type LineLayerSpecification,
-	// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
-	type Map,
-	type StyleSpecification,
-} from "mapbox-gl";
-import type { FeatureCollection } from "geojson";
 import { bbox } from "@turf/bbox";
-import { getClosestCadCoordinate as getClosestFeatureCollectionCoordinate, transformNonValidGeoJSONToValid } from "../geo-helpers/feature-collection";
+import type { FeatureCollection } from "geojson";
+import mapboxgl, { type SymbolLayerSpecification, type FillLayerSpecification, type LineLayerSpecification, Map as MapboxMap, type StyleSpecification } from "mapbox-gl";
 import { parseFileToJSON } from "../file-helpers/file-to-json";
-import type { Subject } from "rxjs";
+import { getClosestCadCoordinate as getClosestFeatureCollectionCoordinate, transformNonValidGeoJSONToValid } from "../geo-helpers/feature-collection";
+import { getAvgLongLat } from "../geo-helpers/feature-collection-stats";
 import { type CornerPosition, getCornerCoordinate } from "../geo-helpers/get-feature-collection-corners";
 import type { SubjectContext } from "../state/subjects-context";
-import { getAvgLongLat } from "../geo-helpers/feature-collection-stats";
 
 mapboxgl.accessToken = "pk.eyJ1Ijoiam9zaG5pY2U5OCIsImEiOiJjanlrMnYwd2IwOWMwM29vcnQ2aWIwamw2In0.RRsdQF3s2hQ6qK-7BH5cKg";
 
 export class MapboxCad {
-	private map: Map | null = null;
+	private map: MapboxMap | null = null;
 
 	private sourceId = "cad-source";
 
@@ -28,9 +20,13 @@ export class MapboxCad {
 
 	private nonGeoReferencedGeoJSON: FeatureCollection | null = null;
 
+	private filtereNonGeoReferenecedJSON: FeatureCollection | null = null;
+
 	private origin: [number, number] | null = null;
 
 	private mapBackgroundCenter: [number, number] = [0, 0];
+
+	private hasGeoJsonBeenAdded = false;
 
 	private fillLayer: FillLayerSpecification = {
 		id: "fill-layer",
@@ -65,7 +61,9 @@ export class MapboxCad {
 		filter: ["==", ["geometry-type"], "Point"],
 	};
 
-	private $eventLock: Subject<MouseEvent> | null = null;
+	private $eventLock: SubjectContext["$eventLock"] | null = null;
+
+	private $zoom: SubjectContext["$zoom"] | null = null;
 
 	constructor(element: HTMLDivElement, subjects: SubjectContext) {
 		this.createMap(element);
@@ -74,7 +72,7 @@ export class MapboxCad {
 	}
 
 	private async createMap(element: HTMLDivElement) {
-		this.map = new mapboxgl.Map({
+		this.map = new MapboxMap({
 			container: element,
 			center: [0, 0],
 			zoom: 2,
@@ -107,6 +105,11 @@ export class MapboxCad {
 		});
 
 		canvasElement.addEventListener("wheel", (event) => {
+			const zoom = this.map?.getZoom();
+			// Let's add a toggle for this
+			if (zoom != null && this.hasGeoJsonBeenAdded) {
+				this.$zoom?.next({ value: zoom, source: "map" });
+			}
 			this.$eventLock?.next(event);
 		});
 
@@ -174,6 +177,8 @@ export class MapboxCad {
 
 		this.$eventLock = subjects.$eventLock;
 
+		this.$zoom = subjects.$zoom;
+
 		subjects.$backgroundMapCenter.subscribe((center) => {
 			this.mapBackgroundCenter = center;
 		});
@@ -191,8 +196,11 @@ export class MapboxCad {
 			this.addSource(transformedFeatureCollection);
 			if (!this.map?.getStyle()?.layers.find((l) => l.source === this.sourceId)) {
 				this.map?.addLayer(this.lineLayer);
+				this.addLayerEvents(this.lineLayer.id);
 				this.map?.addLayer(this.fillLayer);
+				this.addLayerEvents(this.fillLayer.id);
 				this.map?.addLayer(this.textLayer);
+				this.addLayerEvents(this.textLayer.id);
 			}
 			this.map?.fitBounds([one, two, three, four], { duration: 0 });
 			const zoom = this.map?.getZoom();
@@ -200,6 +208,7 @@ export class MapboxCad {
 				throw new Error();
 			}
 			subjects.$cadUploadFinished.next(zoom);
+			this.hasGeoJsonBeenAdded = true;
 		});
 
 		subjects.$geoReferencedGeoJSONUpload.subscribe(async (geoJSONFile) => {
@@ -232,11 +241,14 @@ export class MapboxCad {
 
 			styleSpec.layers.forEach((layer) => {
 				this.map?.addLayer(layer);
+				this.addLayerEvents(layer.id);
 			});
 		});
 
-		subjects.$zoom.subscribe((zoom) => {
-			this.map?.setZoom(zoom);
+		subjects.$zoom.subscribe(({ value, source }) => {
+			if (source === "toolbar") {
+				this.map?.setZoom(value);
+			}
 		});
 	}
 
@@ -260,6 +272,25 @@ export class MapboxCad {
 		};
 	}
 
+	private addLayerEvents(id: string) {
+		this.map?.on("click", id, (event) => {
+			const features = this.map?.queryRenderedFeatures(event.point);
+			console.log("features", features);
+		});
+
+		this.map?.on("mouseover", id, () => {
+			if (this.map != null) {
+				this.map.getCanvas().style.cursor = "pointer";
+			}
+		});
+
+		this.map?.on("mouseleave", id, () => {
+			if (this.map != null) {
+				this.map.getCanvas().style.cursor = "grab";
+			}
+		});
+	}
+
 	private enableMapMovement() {
 		this.map?.dragPan.enable();
 		this.map?.touchZoomRotate.enable();
@@ -269,7 +300,6 @@ export class MapboxCad {
 	private disableMapMovement() {
 		this.map?.dragPan.disable();
 		this.map?.boxZoom.disable();
-		this.map?.scrollZoom.disable();
 		this.map?.touchZoomRotate.disable();
 		this.map?.dragRotate.disable();
 		this.map?.keyboard.disable();

@@ -6,7 +6,7 @@ import type { Units } from "../types/units";
 
 export interface SubjectContext {
 	$rotation: Subject<number>;
-	$zoom: Subject<number>;
+	$zoom: Subject<{ source: "toolbar" | "map"; value: number }>;
 	$geoReferenceCad: Subject<void>;
 	$eventLock: Subject<MouseEvent>;
 	$moveCadPosition: Subject<boolean>;
@@ -27,7 +27,7 @@ export interface SubjectContext {
 }
 
 export const initialSubjectContext: SubjectContext = {
-	$zoom: new Subject<number>(),
+	$zoom: new Subject<{ source: "toolbar" | "map"; value: number }>(),
 	$rotation: new Subject<number>(),
 	$geoReferenceCad: new Subject<void>(),
 	$eventLock: new Subject<MouseEvent>(),
