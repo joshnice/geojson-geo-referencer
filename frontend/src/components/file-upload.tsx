@@ -30,12 +30,7 @@ export function FileUploadComponent({ onFileUpload }: FileUploadProps) {
 					<button type="button" onClick={handleButtonClick}>
 						Add file
 					</button>
-					<input
-						className="file-input"
-						ref={inputRef}
-						type="file"
-						onChange={handleFileUpload}
-					/>
+					<input className="file-input" ref={inputRef} type="file" onChange={handleFileUpload} />
 				</>
 			) : (
 				<p className="file-name">{fileName}</p>

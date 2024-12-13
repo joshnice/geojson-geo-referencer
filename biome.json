@@ -1,18 +1,20 @@
 {
-    "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-    "formatter": {
-        "enabled": true,
-        "lineWidth": 300
-    },
-    "linter": {
-        "enabled": true,
-        "rules": {
-            "complexity": {
-                "noForEach": "off"
-            }
-        }
-    },
-    "organizeImports": {
-        "enabled": true
-    }
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"formatter": {
+		"enabled": true,
+		"lineWidth": 300,
+		"indentWidth": 4,
+		"indentStyle": "tab"
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"complexity": {
+				"noForEach": "off"
+			}
+		}
+	},
+	"organizeImports": {
+		"enabled": true
+	}
 }

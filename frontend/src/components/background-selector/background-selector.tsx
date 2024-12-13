@@ -6,8 +6,7 @@ import "./background-selector.css";
 export function BackgroundSelectorComponent() {
 	const { $selectedBackground } = useSubjectContext();
 
-	const [background, setBackground] =
-		useState<MapBackground>("mapbox-standard");
+	const [background, setBackground] = useState<MapBackground>("mapbox-standard");
 
 	const handleBackgroundChange = (event: ChangeEvent<HTMLSelectElement>) => {
 		const value = event.target.value as MapBackground;
@@ -16,11 +15,7 @@ export function BackgroundSelectorComponent() {
 	};
 
 	return (
-		<select
-			value={background}
-			onChange={handleBackgroundChange}
-			className="background-selector"
-		>
+		<select value={background} onChange={handleBackgroundChange} className="background-selector">
 			<option value="mapbox-standard">Mapbox Standard</option>
 			<option value="mapbox-light">Mapbox Light</option>
 			<option value="mapbox-dark">Mapbox Dark</option>

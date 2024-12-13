@@ -7,9 +7,7 @@ export function MapZoomComponent() {
 	const { $cadUploadFinished, $zoom } = useSubjectContext();
 
 	const handleSetZoomLevel = (event: ChangeEvent<HTMLInputElement>) => {
-		const updatedValue = Number.parseFloat(
-			Number.parseFloat(event.target.value).toFixed(2),
-		);
+		const updatedValue = Number.parseFloat(Number.parseFloat(event.target.value).toFixed(2));
 		setValue(updatedValue);
 		$zoom.next(updatedValue);
 	};
@@ -27,21 +25,8 @@ export function MapZoomComponent() {
 	return (
 		<div className="control-option">
 			<p className="control-label">Map Zoom</p>
-			<input
-				type="number"
-				className="zoom-input"
-				value={value}
-				onChange={handleSetZoomLevel}
-				step={0.01}
-			/>
-			<input
-				type="range"
-				value={value}
-				onChange={handleSetZoomLevel}
-				max={24}
-				min={15}
-				step={0.01}
-			/>
+			<input type="number" className="zoom-input" value={value} onChange={handleSetZoomLevel} step={0.01} />
+			<input type="range" value={value} onChange={handleSetZoomLevel} max={24} min={15} step={0.01} />
 		</div>
 	);
 }

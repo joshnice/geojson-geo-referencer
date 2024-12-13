@@ -14,7 +14,7 @@ export function flattenFeatureCoordinates(feature: Feature) {
 }
 
 export function roundCoordinate(coordinate: [number, number], dp = 6): [number, number] {
-	return coordinate.map(num => Number.parseFloat(num.toFixed(dp))) as [number, number];
+	return coordinate.map((num) => Number.parseFloat(num.toFixed(dp))) as [number, number];
 }
 
 export function findCenterOfTwoCoordinates(coordinateA: [number, number], coordinateB: [number, number]): [number, number] {

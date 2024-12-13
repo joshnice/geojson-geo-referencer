@@ -23,22 +23,15 @@ export function CadPlacementComponent() {
 		}
 	};
 
-	const onBackgroundMapElementRender = async (
-		containerElement: HTMLDivElement,
-	) => {
+	const onBackgroundMapElementRender = async (containerElement: HTMLDivElement) => {
 		if (!createdBackgroundMap.current) {
 			createdBackgroundMap.current = true;
-			const { googleMapsApiKey, googleMapsSessionKey, osMapsApiKey } =
-				await get<{
-					googleMapsApiKey: string;
-					googleMapsSessionKey: string;
-					osMapsApiKey: string;
-				}>();
-			new MapboxBackground(
-				containerElement,
-				{ googleMapsApiKey, googleMapsSessionKey, osMapsApiKey },
-				subjects,
-			);
+			const { googleMapsApiKey, googleMapsSessionKey, osMapsApiKey } = await get<{
+				googleMapsApiKey: string;
+				googleMapsSessionKey: string;
+				osMapsApiKey: string;
+			}>();
+			new MapboxBackground(containerElement, { googleMapsApiKey, googleMapsSessionKey, osMapsApiKey }, subjects);
 		}
 	};
 
@@ -48,16 +41,8 @@ export function CadPlacementComponent() {
 			<MapSearch />
 			<UploadComponent />
 			<BackgroundSelectorComponent />
-			<div
-				className="map-element"
-				style={{ zIndex: 2 }}
-				ref={onCadMapElementRender}
-			/>
-			<div
-				className="map-element"
-				style={{ zIndex: 1 }}
-				ref={onBackgroundMapElementRender}
-			/>
+			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
+			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
 		</div>
 	);
 }

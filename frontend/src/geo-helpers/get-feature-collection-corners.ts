@@ -1,18 +1,10 @@
 import type { FeatureCollection } from "geojson";
 import { flattenFeatureCoordinates } from "./coordinate-helpers";
 
-export type CornerPosition =
-	| "top-left"
-	| "top-right"
-	| "bottom-right"
-	| "bottom-left";
+export type CornerPosition = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 
-export function getCornerCoordinate(
-	featureCollection: FeatureCollection,
-	cornerPosition: CornerPosition,
-): [number, number] {
+export function getCornerCoordinate(featureCollection: FeatureCollection, cornerPosition: CornerPosition): [number, number] {
 	let cornerCoordinate: [number, number] | null = null;
-
 
 	featureCollection.features.forEach((feature) => {
 		const flattenedCoordinates = flattenFeatureCoordinates(feature);
@@ -22,13 +14,7 @@ export function getCornerCoordinate(
 				cornerCoordinate = compCoord as [number, number];
 			}
 
-			if (
-				compareCorner(
-					cornerPosition,
-					cornerCoordinate,
-					compCoord as [number, number],
-				)
-			) {
+			if (compareCorner(cornerPosition, cornerCoordinate, compCoord as [number, number])) {
 				cornerCoordinate = compCoord as [number, number];
 			}
 		});
@@ -41,11 +27,7 @@ export function getCornerCoordinate(
 	return cornerCoordinate;
 }
 
-function compareCorner(
-	cornerPosition: CornerPosition,
-	current: [number, number],
-	comparison: [number, number],
-) {
+function compareCorner(cornerPosition: CornerPosition, current: [number, number], comparison: [number, number]) {
 	const [compLong, compLat] = comparison;
 	const [currentLong, currentLat] = current;
 	switch (cornerPosition) {

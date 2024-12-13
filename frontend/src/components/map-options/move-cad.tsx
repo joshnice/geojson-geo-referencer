@@ -15,12 +15,7 @@ export function MoveCad() {
 	return (
 		<div className="control-option">
 			<p className="control-label">Move Cad</p>
-			<input
-				type="checkbox"
-				className="checkbox"
-				checked={moveCad}
-				onChange={() => handleMoveCad()}
-			/>
+			<input type="checkbox" className="checkbox" checked={moveCad} onChange={() => handleMoveCad()} />
 		</div>
 	);
 }

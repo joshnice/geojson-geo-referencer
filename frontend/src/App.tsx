@@ -3,7 +3,6 @@ import { initialSubjectContext, SubjectsContext } from "./state/subjects-context
 import "./App.css";
 
 function App() {
-
 	return (
 		<div className="root">
 			<SubjectsContext.Provider value={initialSubjectContext}>

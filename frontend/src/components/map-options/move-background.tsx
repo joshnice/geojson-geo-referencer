@@ -15,12 +15,7 @@ export function MoveBackground() {
 	return (
 		<div className="control-option">
 			<p className="control-label">Move Background</p>
-			<input
-				type="checkbox"
-				className="checkbox"
-				checked={moveBackground}
-				onChange={() => handleMoveBackground()}
-			/>
+			<input type="checkbox" className="checkbox" checked={moveBackground} onChange={() => handleMoveBackground()} />
 		</div>
 	);
 }
