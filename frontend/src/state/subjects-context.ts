@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { Subject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import type { GeoReferenceCadResult, GetMapBackgroundPosition } from "../mapbox/types";
 import type { MapBackground } from "../types/map-background";
 import type { Units } from "../types/units";
@@ -24,6 +24,7 @@ export interface SubjectContext {
 	$geoReferencedStyleUpload: Subject<File>;
 	// Background map events
 	$backgroundMapCenter: Subject<[number, number]>;
+	$filteredLayerIds: BehaviorSubject<string[]>;
 }
 
 export const initialSubjectContext: SubjectContext = {
@@ -43,6 +44,7 @@ export const initialSubjectContext: SubjectContext = {
 	$geoReferencedStyleUpload: new Subject<File>(),
 	$selectedBackground: new Subject<MapBackground>(),
 	$backgroundMapCenter: new Subject<[number, number]>(),
+	$filteredLayerIds: new BehaviorSubject<string[]>([]),
 };
 
 export const SubjectsContext = createContext<SubjectContext>(initialSubjectContext);

@@ -1,0 +1,20 @@
+.layer-list {
+	position: absolute;
+	bottom: 30px;
+	left: 25%;
+
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	justify-content: flex-start;
+	align-items: center;
+
+	width: 50%;
+	background-color: white;
+	padding: 10px;
+	min-height: 40px;
+
+	z-index: 10;
+	border-radius: 6px;
+	box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}

@@ -1,14 +1,15 @@
 import { useRef } from "react";
+import { get } from "../../api/api";
 import { MapboxBackground } from "../../mapbox/mapbox-background";
 import { MapboxCad } from "../../mapbox/mapbox-cad";
-import { MapSearch } from "../map-search/map-search";
 import { useSubjectContext } from "../../state/subjects-context";
+import { BackgroundSelectorComponent } from "../background-selector/background-selector";
+import { LayerListComponent } from "../layer-filtering/filtered-layer-list";
 import { MapOptions } from "../map-options/map-options";
+import { MapSearch } from "../map-search/map-search";
 import { UploadComponent } from "../upload-options/upload-options";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./cad-placement.css";
-import { BackgroundSelectorComponent } from "../background-selector/background-selector";
-import { get } from "../../api/api";
 
 export function CadPlacementComponent() {
 	const subjects = useSubjectContext();
@@ -41,6 +42,7 @@ export function CadPlacementComponent() {
 			<MapSearch />
 			<UploadComponent />
 			<BackgroundSelectorComponent />
+			<LayerListComponent />
 			<div className="map-element" style={{ zIndex: 2 }} ref={onCadMapElementRender} />
 			<div className="map-element" style={{ zIndex: 1 }} ref={onBackgroundMapElementRender} />
 		</div>

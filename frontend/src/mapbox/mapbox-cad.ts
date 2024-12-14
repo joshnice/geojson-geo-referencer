@@ -20,8 +20,6 @@ export class MapboxCad {
 
 	private nonGeoReferencedGeoJSON: FeatureCollection | null = null;
 
-	private filtereNonGeoReferenecedJSON: FeatureCollection | null = null;
-
 	private origin: [number, number] | null = null;
 
 	private mapBackgroundCenter: [number, number] = [0, 0];
@@ -64,6 +62,8 @@ export class MapboxCad {
 	private $eventLock: SubjectContext["$eventLock"] | null = null;
 
 	private $zoom: SubjectContext["$zoom"] | null = null;
+
+	private $filteredLayerIds: SubjectContext["$filteredLayerIds"] | null = null;
 
 	constructor(element: HTMLDivElement, subjects: SubjectContext) {
 		this.createMap(element);
@@ -123,6 +123,16 @@ export class MapboxCad {
 		});
 	}
 
+	private updateSource(geojson: FeatureCollection) {
+		const source = this.map?.getSource(this.sourceId);
+		if (source == null) {
+			throw new Error(`Source ${this.sourceId} has not been added to the map yet.`);
+		}
+		if (source.type === "geojson") {
+			source.setData(geojson);
+		}
+	}
+
 	private handleMapRotatation(subjects: SubjectContext) {
 		this.map?.on("rotate", () => {
 			subjects.$rotation.next(this.getMapBearingValue());
@@ -175,9 +185,10 @@ export class MapboxCad {
 			});
 		});
 
+		// Set subjects for class
 		this.$eventLock = subjects.$eventLock;
-
 		this.$zoom = subjects.$zoom;
+		this.$filteredLayerIds = subjects.$filteredLayerIds;
 
 		subjects.$backgroundMapCenter.subscribe((center) => {
 			this.mapBackgroundCenter = center;
@@ -250,6 +261,13 @@ export class MapboxCad {
 				this.map?.setZoom(value);
 			}
 		});
+
+		subjects.$filteredLayerIds.subscribe((layerIds) => {
+			if (this.transformedGeoJSON != null) {
+				const layerIdFilters = layerIds.map((id) => ({ property: "layer", value: id }));
+				this.filterGeojsonWithPropertyValue(layerIdFilters);
+			}
+		});
 	}
 
 	private getCornerForGeoReference(cornerPosition: CornerPosition) {
@@ -275,7 +293,11 @@ export class MapboxCad {
 	private addLayerEvents(id: string) {
 		this.map?.on("click", id, (event) => {
 			const features = this.map?.queryRenderedFeatures(event.point);
-			console.log("features", features);
+			const layerIdsToFilter: string[] = features?.flatMap((feature) => (feature.properties?.layer != null ? [feature.properties.layer] : [])) ?? [];
+			const existingLayerIds = this.$filteredLayerIds?.value ?? [];
+			layerIdsToFilter.push(...existingLayerIds);
+			const uniqueLayerIds = Array.from(new Set(layerIdsToFilter));
+			this.$filteredLayerIds?.next(uniqueLayerIds);
 		});
 
 		this.map?.on("mouseover", id, () => {
@@ -289,6 +311,19 @@ export class MapboxCad {
 				this.map.getCanvas().style.cursor = "grab";
 			}
 		});
+	}
+
+	private filterGeojsonWithPropertyValue(filter: { property: string; value: string | number | boolean }[]) {
+		if (this.transformedGeoJSON == null) {
+			throw new Error("Can't filter feature collection if not defined");
+		}
+
+		const updatedFeatures = this.transformedGeoJSON.features.filter((feature) => {
+			const matchingPropertyValue = filter.some((f) => feature.properties?.[f.property] === f.value);
+			return !matchingPropertyValue;
+		});
+
+		this.updateSource({ type: "FeatureCollection", features: updatedFeatures });
 	}
 
 	private enableMapMovement() {
