@@ -8,13 +8,10 @@ interface TooltipProps {
 
 export function TooltipComponent({ message, children }: PropsWithChildren<TooltipProps>) {
 	const [show, setShow] = useState(false);
-	console.log("show", show);
 	const [tooltipPosition, setTooltipPosition] = useState<{ top: number; left: number } | null>(null);
 	const ref = useRef<HTMLDivElement>(null);
 
 	const onTooltipRender = (element: HTMLDivElement) => {
-		console.log("ref", ref.current);
-		console.log("element", element);
 		if (ref.current == null || element == null) {
 			return;
 		}
@@ -40,7 +37,7 @@ export function TooltipComponent({ message, children }: PropsWithChildren<Toolti
 					</div>,
 					document.body,
 				)}
-			<div ref={ref} className="tooltip-wrapper" onMouseOver={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+			<div ref={ref} className="tooltip-wrapper" onBlur={() => setShow(false)} onFocus={() => setShow(true)} onMouseOver={() => setShow(true)} onMouseLeave={() => setShow(false)}>
 				{children}
 			</div>
 		</>
